@@ -1,2 +1,1 @@
 'hello first commit'
-'hello first commit'
