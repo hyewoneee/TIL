@@ -88,9 +88,12 @@ Docker는 리눅스 커널의  cgroups와 namespaces를 기반으로 하여 이�
 	$ sudo ln -sf /usr/bin/docker.io /usr/local/bin/docker
 	
 	/usr/bin/docker.io 실행 파일을 /usr/local/bin/docker로 링크해서 사용
+
 ### Mac OS X
+
 다음 URL에서 docker-install.exe를 받음
 https://docs.docker.com/toolbox/toolbox_install_windows/
+
 	VirtualBox와 Git을 따로 설치하려면 다음 주소에서 파일을 받은 뒤 설치하면 됨
 	VirtualBox: https://www.virtualbox.org
 	Git: ht	tp://git-scm.com
@@ -105,19 +108,20 @@ Docker 명령어 `docker <명령>` 형식
 
 - docker 명령은 root 권한으로 실행해야 하기 때문에 일반 계정에서는 항상  sudo 사용
 - sudo를 입력하지 않는 방법
-	# 처음부터 root계정으로 로그인하거나 
-	# sudo su 명령을 사용하여 root 계정으로 전환
+
+	처음부터 root계정으로 로그인하거나 
+	sudo su 명령을 사용하여 root 계정으로 전환
 	$ sudo su
 	
-	# 현재 계정을 docker 그룹에 포함(docker 그룹은 root 권한과 동일하므로 꼭 필요한 계정에만 포함)
+	현재 계정을 docker 그룹에 포함(docker 그룹은 root 권한과 동일하므로 꼭 필요한 계정에만 포함)
 	$ sudo usermd -aG docker ${USER}
 	$ sudo service docker restart
 	
-	# 현재 계정에서 로그아웃한 뒤 다시 로그인
+	현재 계정에서 로그아웃한 뒤 다시 로그인
 ### pull 명령으로 이미지 받기 
 Docker Hub에서 우분투 리눅스 이미지 받기
-	# lastest를 설정하면 최신 버전을 받을 수 있다
-	# ubuntu:14.04처럼 태그를 지정해 줄 수 있다
+	lastest를 설정하면 최신 버전을 받을 수 있다
+	ubuntu:14.04처럼 태그를 지정해 줄 수 있다
 	$ sudo docker pull ubuntu:latest
 `docker pull <이미지 이름>:<태그>` 형식
 
@@ -130,8 +134,8 @@ Docker Hub에서 우분투 리눅스 이미지 받기
 `docker images` 명령은 모든 이미지 목록을 출력 
 `docekr images ubuntu` 처럼 이미지 이름을 설정하면 이름은 같지만 태그가 다른 이미지가 출력
 ### run 명령으로 컨테이너 생성
-	# ubuntu 이미지를 컨테이너로 생성한 뒤 ubuntu 이미지 안의 /bin/bash를 실행
-	# 이미지 이름 대신 이미지 ID를 사용해도 됨
+	ubuntu 이미지를 컨테이너로 생성한 뒤 ubuntu 이미지 안의 /bin/bash를 실행
+	이미지 이름 대신 이미지 ID를 사용해도 됨
 	$ sudo docker run -i -t --name hello ubuntu /bin/bash
 	root@a7f75c7b59de:/#
 `docker run <옵션> <이미지 이름> <실행할 파일` 형식
@@ -139,8 +143,8 @@ Docker Hub에서 우분투 리눅스 이미지 받기
 - `--name` 옵션으로 컨테이너의 이름을 지정할 수 있다.
     - 이름을 지정하지 않으면 Docker가 자동으로 이름을 생성하여 지정
 ### ps 명령으로 컨테이너 목록 확인
-# 모든 컨테이너 목록을 출력
-    $ sudo docker ps -a
+	모든 컨테이너 목록을 출력
+	$ sudo docker ps -a
     
     ONTAINER ID        IMAGE                                               COMMAND                  CREATED             STATUS                      PORTS                    NAMES
     a7f75c7b59de        ubuntu                                              "/bin/bash"              5 minutes ago       Exited (0) 48 seconds ago                            hello
