@@ -188,9 +188,12 @@ Docker Hub에서 우분투 리눅스 이미지 받기
 # 4장. Docker 이미지 생성하기
 ### Dockerfile 작성하기
 Dockerfile은 Docker 이미지 설정 파일
+
 	$ mkdir example
 	$ cd example
+
 Dockerfile 생성
+
 	FROM ubuntu:14.04
 	MAINTAINER Foo Bar <foo@bar.com>
 	RUN apt-get update
@@ -258,8 +261,10 @@ Dockerfile 생성
 현재 디렉터리에  `nginx.conf` 파일 복사
 ### commit 명령으로 컨테이너 변경사항을 이미지로 생성하기
 `docker commit`  명령은 컨테이너의 변경 사항을 이미지 파일로 생성
+
 	hello-nginx 컨테이너 안의 파일 내용이 바뀌었다 치고, 컨테이너를 이미지 파일로 생성
 	$ docker commit -a "Foo Bar <foo@bar.com>" -m "add hello.txt" test-nginx test:0.2
+
 `docker commit <옵션> <컨테이너 이름(ID)> <이미지 이름>:<태그>` 형식
 `-a "Foo Bar <foo@bar.com>"과 -m "add hello.txt"` 옵션으로 커밋한 사용자와 로그 메시지를 설정
 **hello-nginx** 컨테이너를 **hello:0.2** 이미지로 생성
