@@ -4,8 +4,8 @@ Link : http://pyrasis.com/docker.html
 # 목차
 - [x] 1장. Docker
 - [x] 2장. Docker 설치하기
-- [ ] 3장. Docker 사용해보기
-- [ ] 4장. Docker 이미지 생성하기
+- [x] 3장. Docker 사용해보기
+- [x] 4장. Docker 이미지 생성하기
 - [ ] 5장. Docker 살펴보기
 - [ ] 6장. Docker 좀더 활용하기
 - [ ] 7장. Docker file 자세히 알아보기
@@ -123,7 +123,7 @@ Docker Hub에서 우분투 리눅스 이미지 받기
 	lastest를 설정하면 최신 버전을 받을 수 있다
 	ubuntu:14.04처럼 태그를 지정해 줄 수 있다
 	$ sudo docker pull ubuntu:latest
-`docker pull <이미지 이름>:<태그>` 형식
+`docker pull <이미지 이름(ID)>:<태그>` 형식
 
 ### images 명령으로 이미지 목록 출력하기
 	$ sudo docker images
@@ -156,10 +156,115 @@ Docker Hub에서 우분투 리눅스 이미지 받기
 ### start 명령으로 컨테이너 시작
 	$ sudo docker start hello
 	hello
-`docekr start <컨테이너 이름>` 
-컨테이너 이름 대신 컨테이너 ID를 사용해도 됨
+`docekr start <컨테이너 이름(ID)>` 
 ### restart 명령으로 컨테이너 재시작
 	$ sudo docker restart hello
 	hello
-`docker restart <컨테이너 이름>` 형식
-컨테이너 이름 대신 컨테이너 ID를 사용해도 됨
+`docker restart <컨테이너 이름(ID)>` 형식
+### attach 명령으로 컨테이너에 접속하기 
+다음 명령을 실행한 뒤 엔터 한번 입력하면 Bash 셸이 표시
+	$ docker attach hello
+	root@a7f75c7b59de:/#
+`docker attach <컨테이너 이름(ID)>` 형식
+`/bin/bash`를 실행했기 때문에 명령을 자유롭게 입력할 수 있지만. DB나 서버 애플리케이션을 실행하면 입력은 할 수 없고 출력만 보게 된다
+### exec 명령으로 외부에서 컨테이너 안의 명령 실행하기
+ `/bin/bash`를 통하지 않고 외부에서 컨테이너 안의 명령 실행
+	$ docker exec hello echo "Hello World"
+	Hello World
+`docker exec <컨테이너 이름(ID)><명령><매개 변수>` 형식
+`docker exe` 명령은 이미 실행된 컨테이너에 `apt-get`, `yum` 명령으로 패키지를 설치하거나, 각종 데몬을 실행할 때 활용할 수 있음
+
+### stop 명령으로 컨테이너 정지하기
+	$ docker stop hello
+`docker stop <컨테이너 이름(ID)>`
+### rm 명령으로 컨테이너 삭제하기
+	docker rm hello
+`docker rm <컨테이너 이름(ID)> `
+`docker rmi ubuntu` 처럼 이미지 이름만 지정하면 태그는 다르지만 `ubuntu` 이름을 가진 모든 이미지가 삭제됨
+
+### 컨테이너를 삭제하기 전에 이미지를 삭제할 경우
+	$ docker rmi -f [IMAGE ID]
+---
+# 4장. Docker 이미지 생성하기
+### Dockerfile 작성하기
+Dockerfile은 Docker 이미지 설정 파일
+
+	$ mkdir example
+	$ cd example
+
+Dockerfile 생성
+
+	FROM ubuntu:14.04
+	MAINTAINER Foo Bar <foo@bar.com>
+	RUN apt-get update
+	RUN apt-get install -y nginx
+	RUN echo "\ndaemon off;" >> /etc/nginx/nginx.conf
+	RUN chown -R www-data:www-data /var/lib/nginx
+	
+	VOLUME ["/data", "/etc/nginx/site-enabled", "/var/log/nginx"]
+	
+	WORKDIR /etc/nginx
+	    
+	CMD ["nginx"]
+	    
+	EXPOSE 80
+	EXPOSE 443
+우분투 14.04를 기반으로 nginx 서버를 설치한 Docker 이미지를 생성하는 예제
+
+- FROM: 어떤 이미지를 기반으로 할지 설정
+- Docker 이미지는 기존에 만들어진 이미지를 기반으로 생성
+- `<이미지 이름>:<태그>` 형식
+- MAINTAINER: 메인테이너 정보
+- RUN: 셸 스크립트 혹은 명령을 실행
+    - 이미지 생성 중에는 사용자 입력을 받을 수 없으므로 apt-get install 명령에서 `-y` 옵션을 사용(yum install도 동일).
+    - 나머지는 nginx 설정
+    - VOLUME: 호스트와 공유할 디렉터리 목록입
+    - `docker run` 명령에서 `-v` 옵션으로 설정가능
+        - ex) `-v /root/data:/data`는 호스트의 **/root/data** 디렉터리를 Docker 컨테이너의 **/data** 디렉터리에 연결
+- CMD: 컨테이너가 시작되었을 때 실행할 실행 파일 또는 셸 스크립트
+- WORKDIR: CMD에서 설정한 실행 파일이 실행될 디렉터리
+- EXPOSE: 호스트와 연결할 포트 번호
+### build 명령으로 이미지 생성하기
+	~/example$ docker build --tag test:0.1 .
+	~/example$ docker imamges
+	REPOSITORY                                  TAG                 IMAGE ID            CREATED             SIZE
+	test                                        0.1                 38923ae29368        6 seconds ago       223MB
+
+`docker bulid <옵션> <Dockerfile 경로> 형식`
+`--tag` 옵션으로 이미지 이름과 태그를 설정
+이미지 이름만 설정하면 태그는 `latest` 로 설정
+### 실행
+	$ docker run --name test-nginx -d -p 80:80 -v /root/data:/data test:0.1
+- `-d` 옵션은 컨테이너를 백그라운드로 실행
+- `-p 80:80` 옵션으로 **호스트의 80번 포트**와 **컨테이너의 80번 포트**를 연결하고 외부에 노출
+- 이렇게 설정한 뒤 **http://<호스트 IP>:80**에 접속하면 컨테이너의 **80**번 포트로 접속
+- `-v /root/data:/data` 옵션으로 호스트의 **/root/data** 디렉터리를 컨테이너의 **/data** 디렉터리에 연결합니다. **/root/data** 디렉터리에 파일을 넣으면 컨테이너에서 해당 파일을 읽음
+---
+# 5장. Docker 살펴보기
+### history 명령으로 이미지 히스토리 살펴보기
+	IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+	38923ae29368        3 minutes ago       /bin/sh -c #(nop)  EXPOSE 443                   0B
+	6257469ebb45        3 minutes ago       /bin/sh -c #(nop)  EXPOSE 80                    0B
+	a0987a8878ee        3 minutes ago       /bin/sh -c #(nop)  CMD ["nginx"]                0B
+	11716480557a        3 minutes ago       /bin/sh -c #(nop) WORKDIR /etc/nginx            0B
+	d143d6c9ce87        3 minutes ago       /bin/sh -c #(nop)  VOLUME [/data /etc/nginx/…   0B
+	89eb1f80ee2c        3 minutes ago       /bin/sh -c chown -R www-data:www-data /var/l…   0B
+	4339d4cfc039        3 minutes ago       /bin/sh -c echo "\ndaemon off;" >> /etc/ngin…   1.61kB
+	b83e316b72e8        3 minutes ago       /bin/sh -c apt-get install -y nginx             20.9MB
+	6dc0de774514        3 minutes ago       /bin/sh -c apt-get update                       13.4MB
+	19d892025f3f        3 minutes ago       /bin/sh -c #(nop)  MAINTAINER Foo Bar <foo@b…   0B
+	2c5e00d77a67        2 months ago        /bin/sh -c #(nop)  CMD ["/bin/bash"]            0B
+`docker history <이미지 이름(ID)>:<태그>` 형식
+### cp 명령으로 파일 꺼내기
+	$ docker cp test-nginx:/etc/nginx/nginx.conf ./
+`docker cp <컨테이너 이름>:<경로> <호스트 경로>` 형식
+현재 디렉터리에  `nginx.conf` 파일 복사
+### commit 명령으로 컨테이너 변경사항을 이미지로 생성하기
+`docker commit`  명령은 컨테이너의 변경 사항을 이미지 파일로 생성
+
+	hello-nginx 컨테이너 안의 파일 내용이 바뀌었다 치고, 컨테이너를 이미지 파일로 생성
+	$ docker commit -a "Foo Bar <foo@bar.com>" -m "add hello.txt" test-nginx test:0.2
+
+`docker commit <옵션> <컨테이너 이름(ID)> <이미지 이름>:<태그>` 형식
+`-a "Foo Bar <foo@bar.com>"과 -m "add hello.txt"` 옵션으로 커밋한 사용자와 로그 메시지를 설정
+**hello-nginx** 컨테이너를 **hello:0.2** 이미지로 생성
