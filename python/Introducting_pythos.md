@@ -102,7 +102,299 @@
 - divmod함수에서 인자로 사용 가능
 - divmod(9,5)
 
-	 >>>>  9 % 5
-	 4
+	9 % 5
+		4
 
-곱셈은 덧셈보다 높은 우선순위를 가짐
+곱셈은 덧셈보다 높은 **우선순위**를 가짐
+
+단일 인용 부호의 문자열을 이중 인용 부호에 넣거나, 이중 이용 부호의 문자열을 단일 인용 부호에 넣을 수 있다.
+	"'Nay, ' said the naysayer."
+		"'Nay, ' said the naysayer."
+	'The rare double quote in captivity: ".'
+		'The rare double quote in captivity: "/.'
+
+세 개의 단일 인용 부호혹은 세 개의 이중 인용 부호를 사용할 수 있다.
+
+	''Boom!'''
+		'Boom'
+	"""Eek!"""
+		'Eek!'
+
+`print()` 의 출력 결과와 대화식 인터프리터의 자동 출력 결과는 다름
+- `print()` 문자열 인용 부호를 제거한 뒤 내용을 출력
+
+이스케이프 시퀀스 `/t` 는 (tab) 의미
+문자열에서 `\'` 혹은 `\"` 을 사용하여v 단일 또는 이중 인용 부호를 표현 할 수 있다.
+
+	test = "\" test!! \"
+	print(test)
+		"test!!"
+
+백슬래시를 입력하고 싶은 경우에는 백슬러시를 두번 입력 `\\`
+
+문자열 변수가 아닌 **리터럴 문자열**을 결합할 수 있다.
+	"test!" "hello"
+		'test! hello'
+
+문자열은 불변하기 때문에 특정 인덱스에 문자를 삽입하거나 변경할 수 없다.
+	name = 'Hyewon'
+	name[0] = 'E'
+	Traceback (most recent call last):
+	  File "/Library/Frameworks/Python.framework/Versions/3.6/lib/python3.6/code.py", line 91, in runcode
+	    exec(code, self.locals)
+	  File "<input>", line 1, in <module>
+	TypeError: 'str' object does not support item assignment
+
+**슬라이스**를 사용하여 한 문자열에서 **문자열 일부**를 추출할 수 있다.
+
+**[start:end:step]**
+
+- `[:]` 처음부터 끝까지 전체 시퀀스를 추출
+- `[start"]` start 오프셋부터 끝까지 시퀀스를 추출
+- `[:end` 처음부터 (end -1) 오프셋까지 시퀀스를 추출
+- `[start: end]` start 오프셋 부터 (end -1) 오프셋까지 시퀀스를 추출
+- `[start:end:step]` step만큼 문자를 건너뛰면서, start 오프셋부터 (end -1) 오프셋까지 시퀀스를 추출
+
+첫 번째 단어 대문자로 변경
+
+`string.captitalize()`
+
+모든 단어의 첫 글자를 대문자로 변경
+
+`string.title()`
+
+글자 모두 대문자로 변경
+
+`string.upper()`
+
+글자 모두 소문자로 변경
+
+`string.lower()`
+
+대문자는 소문자로, 소문자는 대문자로 변경
+
+`string.swqpcase()`
+
+문자열의 일부를 대체하기 위해서 `replace()` 사용
+
+- replace(인자로 바꿀 문자열, 대체할 새 문자열, 바꿀 문자열에 대한 횟수)
+--- 
+
+# 3장. 파이 채우기: 리스트, 튜플, 딕셔너리, 셋
+### 슬라이스로 항목추출하기
+	슬라이스에 스텝을 사용
+	test = ['test1', 'test2', 'test3']
+	test[::2]
+	['test1', 'test3']
+	
+	끝에서 왼쪽으로 2칸씩 항목 추출
+	test[::-2]
+	['test3', 'test1']
+	
+	리스트 반전
+	test[::-1]
+	['test3', 'test2', 'test1']
+
+`extend()` 혹은 `+=`를 사용하여 리스트 **병합** 가능
+
+`insert()` 함수를 사용하여 원하는 위치에 항목 추가 가능
+	test.insert(1, 'test4')
+	test
+	['test1', 'test4', 'test2', 'test3']
+
+오프셋으로 항목 삭제하기
+	del test[-1]
+	test
+	['test1', 'test4', 'test2']
+
+**del**
+- 리스트 함수가 아니라 파이썬 **구문**
+- test[-2].del()을 수행 `X`
+- 객체로부터 이름을 분리하고, 객체의 메모리를 비워준다.
+
+`remove()`로 항목 삭제
+	test.remove('test2')
+	test
+	['test1', 'test4']
+
+### 정렬하기 : sort()
+
+`sort()` 는 리스트 자체를 **내부적**으로 정렬
+
+`sorted()`는 리스트의 정렬된 **복사본**을 반환
+
+리스트 항목이 숫자인 경우, 기본적으로 오름차순으로 졍렬
+
+리스트 항목이 문자열인 경우, 알파벳순으로 정렬
+
+### 튜플
+	하나 이상의 요소가 있는 튜플은 각 요소 뒤에 콤마(,)를 붙임
+	test = '1',
+		('1',)
+	
+	두 개 이상의 요소가 있을 경우, 마지막 요소에는 콤마를 붙이지 않음
+	test = '1', '2', '3'
+		('1', '2', '3')
+
+**튜플 언패킹**
+	한 번에 여러 번슈를 할당
+	tuple = 'test', 'test2', 'test3'
+	tuple
+		('test', 'test2', 'test3')
+	a, b, c = tuple
+	a
+		'test'
+	b
+		'test2'
+	c
+		'test3'
+
+왜 튜플을 사용할까? 
+
+- 튜플은 더 적은 공간을 사용
+- 실수로 튜플의 항목이 손상될 염려가 없음
+- 튜플을 딕셔너리 키로 사용할 수 있다.
+- 네임드 튜플은 객체의 단순한 대안이 될 수 있다.
+- 함수의 인자들은 튜플로 전달된다.
+
+### 딕셔너리로 변환하기: dict()
+	두 항목의 리스트
+	test1 = [['a','b'], ['c', 'd']]
+		dict(test1)
+		{'a': 'b', 'c': 'd'}
+
+	튜플로 된 리스트
+	test2 = [('a', 'b'), ('c', 'd')]
+		dict(test2)
+		{'a': 'b', 'c': 'd'}
+	
+	리스트로 된 튜플
+	test3 = (['a', 'b'], ['c','d'])
+		dict(test3)
+		{'a': 'b', 'c': 'd'}
+	
+	두 문자 문자열로된 리스트
+	test4 = ['ab', 'cd']
+		dict(test4)
+		{'a': 'b', 'c': 'd'}
+	
+	두 문자 문자열로된 튜플
+	test5 = ('ab', 'cd')
+		dict(test5)
+		{'a': 'b', 'c': 'd'}
+
+### 딕셔너리 모든 쌍의 키-값 얻기: items()
+	list(dict(test5).items())
+		[('a', 'b'), ('c', 'd')]
+
+### 딕셔너리 할당:=, 복사: copy()
+	딕셔너리를 할당한 후 변경할 때 딕셔너리를 참조하는 모든 이름에 변경된 딕셔너리를 반영
+	dict_test = {'test': '1', 'test2':'2'}
+	save_test = dict_test
+	dict_test['test3'] = '3'
+	save_test
+		{'test': '1', 'test2': '2', 'test3': '3'}
+	
+	딕셔너리의 키와 값을 또 다른 딕셔너리로 복사하기 위해서는 위와 같이 할당하지 않고 copy() 사용
+	copy_test = dict_test.copy()
+	dict_test['test5'] = 5
+	copy_test
+		{'test': '1', 'test2': '2', 'test3': '3', 'test4': '4'}
+
+### 셋
+
+`셋`은 값을 버리고 키만 남은 딕셔너리
+
+각 키는 유일해야 한다.
+
+어떤 것이 존재하는지 여부만 판단하기 위해 셋을 사용 
+
+### 데이터 타입 변환하기: set()
+	'tttest' 셋에는 이 문자들이 하나 씩 포함
+	set('tttest')
+		{'e', 't', 's'}
+	
+	리스트를 셋으로 만들기
+	set(['test', 'test2', 'test3'])
+		{'test3', 'test2', 'test'}
+	
+	튜플을 셋으로 만들기
+	set(('test', 'test1', 'test2'))
+		{'test2', 'test', 'test1'}
+	
+	딕셔너리에 set()을 사용하면 키만 사용된다.
+	set({'test':'1', 'test2':'2'})
+		{'test2', 'test'}
+
+### 콤비네이션과 연산자
+**셋 인터섹션 연산자**(셋 교집합 연산자)인 앰퍼샌트(&)를 사용
+	test = {
+	    'a': {'test','test2'},
+	    'b': {'test1', 'test2', 'test3'}
+	    'c': {'test3'}
+	}
+	for name, contents in test.items():
+	    if contents & {'test1', 'test2'}:
+	        print(name)
+
+**인터섹션**(교집합: 양쪽 셋에 모두 들어 있는 멤버)
+	a = {1,2}
+	b = {2,3}
+	a & b
+		{2}
+	
+	a.intersection(b)
+		{2}
+
+**유니온**(합집합: 각 셋의 멤버 모두)
+	a | b
+		{1, 2, 3}
+	a.union(b)
+		{1, 2, 3}
+
+**디퍼런스**(차집합: 첫 번째 셋에는 있지만 두 번째 셋에는 없는 멤버)
+	a - b
+		{1}
+	a.difference(b)
+		{1}
+
+**익스클루시브**(대칭 차집합: 한쪽 셋에는 들어 있지만 양쪽 모두에 들어 있지 않은 멤버)
+	a ^ b
+		{1, 3}
+	a.symmetric_difference(b)
+		{1, 3}
+
+**부분집합**첫 번째 셋이 두 번째 셋의 서브셋
+	a <= b
+		False
+	a.issubset(b)
+		False
+	a <= a
+		True
+
+첫 번째 셋이 두 번째 셋의 **프로퍼 서브셋**(진부분집합)이 되려면,
+두 번째 셋에는 첫 번째 셋의 모든 멤버를 포함한 그 이상의 멤버가 있어야 한다.
+	a < b
+		False
+	a < a
+		False
+**슈퍼셋**은 서브셋의 반대
+	a.issubset(b)
+		False
+	
+	모든 셋은 자신의 슈퍼셋이다
+	a >= a
+		True
+	a.issuperset(a)
+		True
+첫 번째 셋이 두 번째 셋의 **프로퍼 슈퍼셋**인지 확인
+첫 번째 셋이 두 번째 셋의 프로퍼 슈퍼셋이 되려면, 
+첫 번째 셋에는 두 번째 셋의 모든 멤버를 포함한 그 이상의 멤버가 있어야한다.
+	a > b
+		False
+	
+	모든 셋은 자신의 프로퍼 슈퍼셋이 될 수 없다.
+	a > a
+		False
+--- 
+
