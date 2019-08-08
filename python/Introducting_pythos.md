@@ -397,4 +397,123 @@
 	a > a
 		False
 --- 
+# 4장. 파이 크러스트: 코드 구조
+### break 확인하기: else
+- while 문이 모두 실행되었지만 발견하지 못했을 경우에는 else가 실행
+- for 문에서 break 문이 호출되지 않으면 else 문이 실행
+
+### 여러 시퀀스 순회하기: zip()
+`zip()` 함수를 사용하여 여러 시퀀스를 병렬로 순회
+- 여러 시퀀스 중 가장 짧은 시퀀스가 완료되면 `zip()` 은 멈춤
+- 아래의 예제에서는 리스트 중 하나(dessert)가 다른 리스트보다 길다.
+- 그래서 다른 리스트를 모두 확장하지 않는 한 `pudding`을 얻을 수 없다.
+
+	days =['Monday', 'Tuesday', 'Wednesday']
+	fruits = ['banana', 'orange', 'peach']
+	drintk = ['coffe', 'tea', 'beeer']
+	dessert = ['tiramisu', 'ice cream', 'pie', 'pudding']
+	
+	for days, fruits, drintk, dessert in zip(days, fruits, drintk, dessert):
+	    print(days, ": drink", drintk, "-eat", fruits, "-enjoy", dessert)
+	
+	Monday : drink coffe -eat banana -enjoy tiramisu
+	Tuesday : drink tea -eat orange -enjoy ice cream
+	Wednesday : drink beeer -eat peach -enjoy pie
+
+`zip()`  함수로 여러 시퀀스를 순회하며, 동일한 오프셋에 있는 항목으로부터 튜플을 만들 수 있다.
+	english =  'Monday', 'Tuesday', 'Wednesday'
+	french = 'Lundi', 'Mardi', 'Mercredi'
+	list(zip(english, french))
+	[('Monday', 'Lundi'), ('Tuesday', 'Mardi'), ('Wednesday', 'Mercredi')]
+	
+	
+	zip()의 결과를 dict()에 넣음
+	
+	dict(zip(english, french))
+	{'Monday': 'Lundi', 'Tuesday': 'Mardi', 'Wednesday': 'Mercredi'}
+
+### 컨프리헨션
+**컴프리헨션**(comprehension, 함축) 은 하나 이상의 이터레이터로부터 파이썬의 자료구조를 만는 콤팩트한 방법
+비교적 간편한 구문으로 반복문과 조건 테스트를 결합할 수 있도록 해준다.(더 파이써닉하게 사용)
+
+**리스트 컴프리헨션**
+	[표현식 for 항목 in 순회 가능한 객체]
+	
+	조건 표현식을 포함할 수 있다.
+	[표현식 for 항목 in 순회 가능한 객체 if 조건]
+	
+	중첩 루프
+	rows = range(1,4)
+	cols = range(1,3)
+	cells = [(row, col) for row in rows for col in cols] 
+	cells
+	[(1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2)]
+	
+	for cell in cells:
+	    print(cell)
+    	
+	(1, 1)
+	(1, 2)
+	(2, 1)
+	(2, 2)
+	(3, 1)
+	(3, 2)
+
+**딕셔너리 컴프리헨션**
+	{키_표현식 : 값_표현식 for 표현식 in 순회 가능한 객체}
+	
+	word = 'letters'
+	letter_counts = {letter: word.count(letter) for letter in word}
+	letter_counts
+	{'l': 1, 'e': 2, 't': 2, 'r': 1, 's': 1}
+
+위의 예제는 문자열 `letters` 의 각 일곱 글자를 반복해서 글자가 몇 번 나왔는지 그 수를 센다.
+`e` 와 `t` 모두 두 번씩 세기 때문에 두 번의 `word.count(letter)` 사용은 시간을 낭비한다.
+그러나 두 번째로 `e` 를 셀 때는 딕셔너리에 이미 존재하는 항목을 단지 교체만 하기 때문에 아무런 해가 되지 않음.
+
+	letter_counts = {letter: word.count(letter) for letter in set(word)}
+	letter_counts
+	{'e': 2, 't': 2, 's': 1, 'r': 1, 'l': 1}
+
+전의 예제와 다르게 정렬되어 있다.
+
+이유는 `set(word)` 를 순회하는 것은 문자열 `word` 를 순회하는 것과 다르게 문자를 반환하기 때문
+
+**셋 컴프리헨션**
+	{표현식 for 표현식 in 순회 가능한 객체}
+	
+	a_set = {number for number in range(1,6) if number % 3 == 1}
+	a_set
+	{1, 4}
+
+**제너레이터 컴프리헨션**
+- **튜플은 컴프리헨션이 없다**
+- 아래의 내용은 **제너레이터 컴프리헨션**이며 **제너레이터 객체**를 반환
+
+	number_thing = (number for number in range(1,6))
+	
+	type(number_thing)
+	<class 'generator'>
+	
+	
+	제너레이터 객체를 바로 순환할 수 있다.
+	
+	for number in number_thing:
+	    print(number)
+    	
+	1
+	2
+	3
+	4
+	5
+	
+	리스트 컴프리헨션처럼 만들기 위해 제너레이터 컴프리헨션에 list() 호출을 랩핑할 수 있다.
+	
+	number_list = list(number_thing)
+	number_list
+	[1, 2, 3, 4, 5]
+
+- 제너레이터는 **한 번**만 실행 될 수 있다.
+- 리스트, 셋, 문자열, 딕셔너리는 메모리에 존재하지만, 제너레이터는 **즉석에서 그 값을 생성**하고, **이터레이터를 통해서 한 번에 값을 하나씩 처리**한다.
+- 제너레이터는 이 **값을 기억하지 않으므로** 다시 시작하거나 제너레이터를 **백업**할 수 **없다**.
 
