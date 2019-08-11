@@ -6,7 +6,7 @@ Link : http://pyrasis.com/docker.html
 - [x] 2장. Docker 설치하기
 - [x] 3장. Docker 사용해보기
 - [x] 4장. Docker 이미지 생성하기
-- [ ] 5장. Docker 살펴보기
+- [x] 5장. Docker 살펴보기
 - [ ] 6장. Docker 좀더 활용하기
 - [ ] 7장. Docker file 자세히 알아보기
 - [ ] 8장. Docker로 애플리케이션 배포하기
@@ -266,5 +266,111 @@ Dockerfile 생성
 	$ docker commit -a "Foo Bar <foo@bar.com>" -m "add hello.txt" test-nginx test:0.2
 
 `docker commit <옵션> <컨테이너 이름(ID)> <이미지 이름>:<태그>` 형식
-`-a "Foo Bar <foo@bar.com>"과 -m "add hello.txt"` 옵션으로 커밋한 사용자와 로그 메시지를 설정
-**hello-nginx** 컨테이너를 **hello:0.2** 이미지로 생성
+`-a "Foo Bar <foo@bar.com>"과 -m "add test.txt"` 옵션으로 커밋한 사용자와 로그 메시지를 설정
+**test-nginx** 컨테이너를 **test:0.2** 이미지로 생성
+
+	// test:0.2 이미지 생성
+	docker images
+	REPOSITORY                                  TAG                 IMAGE ID            CREATED             SIZE
+	test                                        0.2                 d4489f7e07df        12 seconds ago      223MB
+	test                                        0.1                 38923ae29368        3 days ago          223MB
+
+### diff 명령으로 컨테이너에서 변경된 파일 확인하기
+`docker diff` 명령은 컨테이너 실행되면서 변경된 파일 목록을 출력
+비교 기준은 컨테이너를 생성한 이미지 내용
+
+	docker diff test-nginx
+	C /etc
+	C /etc/nginx
+	A /etc/nginx/site-enabled
+	A /data
+	C /run
+	A /run/nginx.pid
+	C /var
+	C /var/lib
+	C /var/lib/nginx
+	A /var/lib/nginx/body
+	A /var/lib/nginx/fastcgi
+	A /var/lib/nginx/proxy
+	A /var/lib/nginx/scgi
+
+`docker diff <컨테이너 이름(ID)>` 
+`A`는 추가된 파일, `C` 는 변경된 파일, `D` 는 삭제된 파일
+
+### inspect 명령으로 세부 정보 확인하기
+`docker inspect` 명령은 이미지와 컨테이너의 세부 정보를 출력
+`docker inspect <이미지(이미지 ID) 또는 컨테이너(컨테이너 ID) 이름>`
+A /var/lib/nginx/uwsgi
+
+---
+# 6. Docker 좀더 활용하기
+## Docker  개인 저장소 구축하기
+Docker 저장소 서버는 Docker 레지스트리(registry) 서버라고 부름.
+`docker push` 명령으로 레지스트리 서버에 이미지를 올리고,
+`docker pull` 명령으로 이미지를 받을 수 있다.
+Docker 레지스트리가 동작하는 서버에 저장하는 방법과  Amazon S3에 저장하는 방법을 설명
+	먼저 기존에 실행되고 있는 Docker 데몬을 정지한 뒤 --insecure-segistry 옵션을 사용하여 Docker 데몬을 실행
+	sudo sservice docker stop
+	docker -d --insecure-registry localhost:5000
+
+보통 Docker 데몬을 직접 실행하지 않고 서비스 형태로 실행
+이때는 /etc/init.d/docker 파일의 DOCKER_OPTS 부분을 다음과 같이 설정(이 파일은 root 권한으로 수정해야한다)
+	/etc/init.d/docker
+	DOCKER_OPTS=--insecure-registry localhost:5000
+
+Docker 1.8.0 이후부터는 `docker -d` 옵션이 `docker daemon` 명령으로 바뀜
+### 로컬에 이미지 데이터 저장
+Docker 레지스트리 서버도 Docker Hub를 통해 Docker 이미지로 제공된다.
+먼저 Docker 레지스트리 이미지를 받는다.
+
+	docker pull registry:latest
+	
+	docker run -d -p 5000:5000 --name hello-registry \
+	    -v /tmp/registry:/tmp/registry \
+	    registry
+	
+	15d09d97e73cd24c8c00c2f752daa162f6f619a71e42c6fe7eda34c7331ba273
+
+이렇게 실행하면 이미지 파일은 호스트의 **/tmp/registrt** 디렉터리에 저장된다.
+### push 명령으로 이미지 올리기
+test:0.1 이미지를 개인 저장소에 올리기
+
+	docker tag test:0.1 localhost:5000/test:0.1
+	docker push localhost:5000/test:0.1
+
+태그를 생성하는 명령어
+`docker tag <이미지 이름>:<태그> <Docker 레지스트리 URL>/<이미지 이름>:<태그>` 형식
+이미지 올리는 명령어
+`docker push <Docker 레지스트리 URL>/<이미지 이름>:<태그>`
+
+개인 저장소에 이미지를 올릴 때는 태그를 먼저 생성
+`docker tag` 명령으로 `test:0.1` 이미지를 [localhost:5000/test:0.1](http://localhost:5000/test:0.1) 태그로 생성
+그리고 `docker push` 명령으로 [localhost:5000/test:0.1](http://localhost:5000/test:0.1) 이미지를 개인 저장소에 올림(태그를 생성했으므로 실제로는 test:0.1 이미지가 올라감)
+
+이제 다른 서버에서 개인 저장소(Docker 레지스트리 서버)에 접속하여 이미지를 받아 올 수 있다.
+	docker pull ip/test:0.1
+
+### Docker 컨테이너 연결하기
+Docker 컨테이너끼리 연결할 때는 `docker run` 명령에서  `--link` 옵션을 사용
+	mongo DB를 사용하여 DB 이미지를 컨테이너로 실행
+	(docker run 명령은 로컬에 이미지가 없으면 자동으로 이비지를 받아온다)
+	
+	docker run --name db -d mongo
+
+DB 컨테이너 이름은 db로 설정 
+web 컨테이너를 생성하면서 db 컨테이너와 연결 
+웹 서버로 사용할 컨테이너는 nginx 이미지로 생성
+	docker run --name web -d -p 80:80 --link db:db nginx
+
+docker run 명령에서 연결 옵션은 `--link <컨테이너 이름>:<별칭>`
+	docker ps -a
+	CONTAINER ID        IMAGE                                               COMMAND                   CREATED             STATUS                     PORTS                         NAMES
+	7a1b5ef0d5fe        nginx                                               "nginx -g 'daemon of…"    3 minutes ago       Created                                                  web
+	fb7d2e4a097d        mongo                                               "docker-entrypoint.s…"    6 minutes ago       Up 6 minutes               27017/tcp                     db
+
+**db** 컨테이너와 **web** 컨테이너가 연결됨
+**web/db**라고 표시되는데 **web** 컨테이너에서 **db** 컨테이너에 접속할 수 있다는 것임
+이제 **web** 컨테이너 안에서 `db:27017` 주소로 **db** 컨테이너의 MongoDB에 접속할 수 있다.
+	mongodb://db:27017/exampledb
+컨테이너 안에서 다른 컨테이너에 접속할 때는 `<별칭>:<포트번호` 형식으로 사용
+
