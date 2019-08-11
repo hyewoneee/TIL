@@ -517,3 +517,182 @@
 - 리스트, 셋, 문자열, 딕셔너리는 메모리에 존재하지만, 제너레이터는 **즉석에서 그 값을 생성**하고, **이터레이터를 통해서 한 번에 값을 하나씩 처리**한다.
 - 제너레이터는 이 **값을 기억하지 않으므로** 다시 시작하거나 제너레이터를 **백업**할 수 **없다**.
 
+### 함수
+
+함수는 입력 **매개변수**로 모든 타입을 여러 개 취할 수 있다.
+
+함수로 전달한 값을 **인자**라 부른다.
+
+인자와 함수를 호출하면 인자의 값은 함수 내에서 해당하는 **매개변수**에 복사된다.
+
+만약 함수가 명시적으로 return을 호출하지 않으면, 호출자는 반환값으로 None을 얻음
+
+**위치 인자**
+순서대로 상응하는 매개변수에 복사하는 위치 인자.
+
+**키워드 인자**
+매개변수에 상응하는 이름을 인자에 지정
+위치 인자와 키워드 인자로 함수를 호출한다면 위치 인자가 먼저 와야 한다.
+
+### 기본 매개 변수 값 지정하기
+호출자가 대응하는 인자를 제공하지 않으면 기본값을 사용.
+기본 인자값은 함수가 실행될 때 계산되지 않고, 함수를 **정의**할 때 계산된다.
+
+### 위치 인자 모으기: *
+파이썬에는 포인터가 없다. 
+`*`를 사용할 때 가변 인자의 이름으로 `args` 를 사용할 필요가 없지만 관용적으로 `args`를 사용한다.
+
+함수의 매개변수에 애스터리스크를 사용할 때, 애프터리스크는 매개변수에 위치인자 변수들을 튜플로 묶는다.
+	def print_args(*args):
+	    print('Positinal argument tuple:', args)
+	
+	함수를 인자 없이 호출하면 *args에는 아무것 도 없다.
+	print_args()
+	Positinal argument tuple: ()
+	
+	인자를 넣어서 args 튜플을 출력해보자.
+	print_args(3,2,1, 'wait!', 'uh...')
+	Positinal argument tuple: (3, 2, 1, 'wait!', 'uh...')
+### 키워드 인자 모으기: **
+키워드 인자를 딕셔너리로 묶기 위해 두 개의 `애스터리스크(**)` 를 사용할 수 있다.
+키워드 매개변수의 이름을 `kwargs`로 할 필요는 없지만 관용적으로 `kwargs`를 사용한다.	
+
+	def print_kwargs(**kwargs):
+	    print('Keyword arguments:', kwargs)
+	
+	
+	함수 안에 kwargs 딕셔너리가 있다.
+	
+	print_kwargs(wine='merlot', entree='mutton', desert='macaroon')
+	Keyword arguments: {'wine': 'merlot', 'entree': 'mutton', 'desert': 'macaroon'}
+위치 매개변수와 *args, **kwargs를 섞어서 사용하려면 이들을 순서대로 배치해야한다.
+
+### 일등 시민: 함수
+`모든 것이 객체다` 
+함수를 변수에 할당할 수 있고, 
+다른 함수에서 이를 인자로 쓸 수 있으며, 
+함수에서 이를 반환할 수 있다.
+
+	def answer():
+	print(42)
+	
+	answer()
+	42
+	
+	def run_something(func):
+	    func()
+	
+	run_something함수에 answer 인자를 넣으면 다른 모든 인자와 마찬가지로 이 함수를 데이터 처럼 사용한다
+	run_something(answer)
+	42
+
+	def add_args(arg1, arg2):
+	    print(arg1 + arg2)
+    	
+	
+	세 인자를 취하는 run_something() 함수
+	def run_something(func, arg1, arg2):
+	    func(arg1, arg2)
+	
+	run_something()를 호출 할 때, 호출자에 의해 전달된 함수는 func 매개변수에 할당되며
+	arg1과 arg2는 인자 목록의 값을 얻고
+	인자와 함께 func(arg1, arg2) 함수가 실행된다.
+    	
+	run_something(add_args, 5, 9)
+	14
+
+`*args` `**kwargs` 인자와 결합해서 사용 할 수 있다.
+	def sum_args(*args):
+	    return sum(args)
+	
+	def run_with_positional_args(func, *args):
+	    return func(*args)
+	
+	run_with_positional_args(sum_args, 1,2,3,4)
+	10
+
+함수를 리스트, 튜플, 셋, 딕셔너리의 요소로 사용할 수 있다.
+함수는 불변하기 때문에 딕셔너리 키로도 사용할 수 있다.
+
+### 내부함수
+함수 안에 또 다른 함수를 정의할 수 있다.
+루프나 코드 중복을 피하기 위해 또 다른 함수 내에 어떤 복잡한 작업을 한 번 이상 수행할 때 유용하게 사용된다.
+	def outer(a,b):
+	    def inner(c,d):
+	        return c + d
+	    return inner(a, b)
+	outer(4,7)
+	11
+
+### 클로져
+내부함수는 **클로져**처럼 행동할 수 있다.
+클로져는 다른 함수에 의해 동적으로 생성된다.
+바깥 함수로부터 생성된 변수값을 변경하고, 저장할 수 있는 함수
+
+	innner2()는 인자를 취하지 않고, 외부 함수의 변수를 직접 사용한다.
+	knights2() 는 inner2 함수 이름을 호출하지 않고, 이를 반환한다.
+	
+	def knights2(saying):
+	    def inner2():
+        	return "We are the knights who say: '%s'" % saying
+	    return inner2
+
+`inner2()` 함수는 `knight2()` 함수가 전달받은 `saying` 변수를 알고 있다.
+코드에서 return inner2 라인은 (호출되지 않은) inner2 함수의 특별한 복사본을 반환한다.
+이것이 외부 함수에 의해 동적으로 생성되고, 그 함수의 변수 값을 알고 있는 함수인 클로져다.
+
+	a = knights2('Duct')
+	b = knights2('Hasepfeffer')
+	type(a)
+	<class 'function'>
+	type(a)	
+	<class 'function'>
+	
+	이들은 함수지만, 클로져이기도 하다.
+	a
+	<function knights2.<locals>.inner2 at 0x1062c7488>
+	b
+	<function knights2.<locals>.inner2 at 0x1065cdea0>
+	
+	이들을 호출하면 knights2()함수에 전달되어 사용된 saying을 기억한다.
+	a()
+	"We are the knights who say: 'Duct'"
+	b()
+	"We are the knights who say: 'Hasepfeffer'"
+
+### 익명 함수: lambda()
+파이썬의 **람다** 함수는 단일문으로 표현되는 익명 함수다.
+	words: words 리스트
+	func : words의 각각 word 문자열에 적용되는 함수
+	
+	def edit_story(words, func):
+	    for word in words:
+	        print(func(word))
+	
+	stairs = ['thud', 'meow', 'thud', 'hiss']
+	
+	첫 글자를 대문자로 만들고 느낌표 붙이기
+	def enliven(word):
+	    return word.capitalize() + '!'
+	
+	edit_story(stairs,enliven)
+	Thud!
+	Meow!
+	Thud!
+	Hiss!
+
+**람다 사용**
+	edit_story(stairs, lambda word: word.capitalize() + '!')
+	Thud!
+	Meow!
+	Thud!
+	Hiss!
+
+**람다**에서 하나의 word **인자**를 취했다.
+람다의 콜론 `(:)` 과 닫는 괄호 사이에 있는 것이 함수의 정의 부분이다.
+대부분의 경우 `enliven()` 과 같은 실제 함수를 사용하는 것이 람다를 사용하는 것보다 훨씬 더 명확하다.
+람다는 많은 작은 함수를 정의하고,
+이들을 호출해서 얻은 모든 결과값을 저장해야 하는 경우에 유용하다.
+특히 **콜백 함수**를 정의하는 그래픽 유저 인터페이스(GUI)에서 람다를 사용할 수 있다.
+
+
