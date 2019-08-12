@@ -695,4 +695,120 @@
 이들을 호출해서 얻은 모든 결과값을 저장해야 하는 경우에 유용하다.
 특히 **콜백 함수**를 정의하는 그래픽 유저 인터페이스(GUI)에서 람다를 사용할 수 있다.
 
+### 제너레이터
+- **제너레이터**는 파이썬의 시퀀스를 생성하는 **객체**
+- 전체 시퀀스를 한번에 메모리에 생성하고 정렬할 필요 없이,
+- 잠재적으로 아주 큰 시퀀스를 **순회**할 수 있다.
+- 제너레이터는 **이터레이터에** 대한 **데이터**의 소스로 자주 사용
+- 제너레이터는 **순회**할 때마다 **마지막으로 호출된 항목**을 **기억하고 다음 값을 반환**한다.
+- 제너레이터는 **일반함수**와 다르다.
+- 잠재적으로 큰 **시퀀스를 생성**하고, 제너레이터 **컴프리헨션에 대한 코드**가 긴 경우 **제너레이터 함수를 사용**
+- 일반 함수지만 `return`문으로 값을 반환하지 않고, `yield` 문으로 값을 반환
+
+	def my_range(first =0, last=10, step=1):
+	    number = first
+	    while number < last:
+	        yield number
+	        number += step
+ 	
+	함수 실행       
+	my_range
+	<function my_range at 0x109e186a8>
+	
+	재너레이터 객체를 반환
+	ranger = my_range(1,5)
+	ranger
+	<generator object my_range at 0x109c43f68>
+	
+	제너레이터 객체를 순회
+	for x in ranger:
+	    print(x)
+	    	
+	1
+	2
+	3
+	4
+
+### 데커레이터
+**데커레이터**는 하나의 함수를 취해서 또 다른 함수를 반환하는 함수
+	def document_it(func):
+	    def new_function(*args, **kwargs):
+	        print('Running function:', func.__name__)
+	        print('Positional arguments:', args)
+	        print('Keyword arguments', kwargs)
+	        result = func(*args, **kwargs)
+	        print('Result:', result)
+	        return result
+	    return new_function
+
+`document_it()` 함수에 어떤 `func 함수` 이름을 전달하든지 간에 document_it() 함수에 **추가 선언문이 포함된 새 함수**를 얻음
+데커레이터는 실제로 `func` 함수로부터 코드를 실행하지 않음
+하지만 ducument_it() 함수로 부터 func를 호출하여 **결과 뿐만 아니라 새로운 함수를 얻음**
+
+	def add_ints(a, b):
+	    return a + b
+	add_ints(3,5)
+	8
+	
+	데커레이터를 수동으로 할당
+	cooler_add_ints = document_it(add_ints)
+	cooler_add_ints(3,5)
+	Running function: add_ints
+	Positional arguments: (3, 5)
+	Keyword arguments {}
+	Result: 8
+	8
+
+데코레이터 사용
+	@document_it
+	def add_ints(a ,b):
+	    return a + b
+	add_ints(3, 5)
+	Running function: add_ints
+	Positional arguments: (3, 5)
+	Keyword arguments {}
+	Result: 8
+	8
+
+### 네임스페이스와 스코프
+네임스페이스는 **특정 이름**이 유일
+다른 네임스페임스에서의 **같은 이름과 관계가 없는 것**
+함수로부터 전역변수(global variable)의 값을 얻을 수 있다.
+	animal = 'fruitbat'
+	def print_global():
+	    print('inside print_global', animal)
+	    	
+	print('at the top level:', animal)
+	at the top level: fruitbat
+	print_global()
+	inside print_global fruitbat
+
+함수에서 전역 변수의 값을 얻어서 바꾸려 하면 에러 발생
+	def chage_and_print_global():
+	    print('inside change_and_print_global', animal)
+	    animal = 'wombat'
+	    print('after the change', animal)
+	    
+	chage_and_print_global()
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	  File "<input>", line 2, in chage_and_print_global
+	UnboundLocalError: local variable 'animal' referenced before assignment
+
+함수 내에 있는 지역변수 예제
+	def change_local():
+		로컬(local) 네임스페이스
+		    animal = 'wombat'
+		    print('inside change_local', animal, id(animal))
+	    
+	change_local()
+	inside change_local wombat 4461024176
+
+`change_local()` 함수 내의 `animal 변수`가 메인 프로그램의 **animal 변수와 같지 않다는 것을 증명**하기 위해 **파이썬 id()**를 사용
+	animal
+	'fruitbat'
+	id(animal)
+
+함수 내의 `지역 변수(local variable)`가 아닌 전역 변수를 접근하기 위해 `global 키워드`를 사용해서 **전역변수의 접근을 명시**
+- 파이썬 철학: **명확한것이 함축적인 것보다 낫다.**
 
