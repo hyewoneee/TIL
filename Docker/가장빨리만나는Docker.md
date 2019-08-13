@@ -339,27 +339,38 @@ test:0.1 이미지를 개인 저장소에 올리기
 	docker push localhost:5000/test:0.1
 
 태그를 생성하는 명령어
+
 `docker tag <이미지 이름>:<태그> <Docker 레지스트리 URL>/<이미지 이름>:<태그>` 형식
+
 이미지 올리는 명령어
+
 `docker push <Docker 레지스트리 URL>/<이미지 이름>:<태그>`
 
+
 개인 저장소에 이미지를 올릴 때는 태그를 먼저 생성
+
 `docker tag` 명령으로 `test:0.1` 이미지를 [localhost:5000/test:0.1](http://localhost:5000/test:0.1) 태그로 생성
+
 그리고 `docker push` 명령으로 [localhost:5000/test:0.1](http://localhost:5000/test:0.1) 이미지를 개인 저장소에 올림(태그를 생성했으므로 실제로는 test:0.1 이미지가 올라감)
+
 
 이제 다른 서버에서 개인 저장소(Docker 레지스트리 서버)에 접속하여 이미지를 받아 올 수 있다.
 	docker pull ip/test:0.1
 
 ### Docker 컨테이너 연결하기
 Docker 컨테이너끼리 연결할 때는 `docker run` 명령에서  `--link` 옵션을 사용
+
 	mongo DB를 사용하여 DB 이미지를 컨테이너로 실행
 	(docker run 명령은 로컬에 이미지가 없으면 자동으로 이비지를 받아온다)
 	
 	docker run --name db -d mongo
 
 DB 컨테이너 이름은 db로 설정 
+
 web 컨테이너를 생성하면서 db 컨테이너와 연결 
+
 웹 서버로 사용할 컨테이너는 nginx 이미지로 생성
+
 	docker run --name web -d -p 80:80 --link db:db nginx
 
 docker run 명령에서 연결 옵션은 `--link <컨테이너 이름>:<별칭>`
@@ -369,8 +380,157 @@ docker run 명령에서 연결 옵션은 `--link <컨테이너 이름>:<별칭>`
 	fb7d2e4a097d        mongo                                               "docker-entrypoint.s…"    6 minutes ago       Up 6 minutes               27017/tcp                     db
 
 **db** 컨테이너와 **web** 컨테이너가 연결됨
+
 **web/db**라고 표시되는데 **web** 컨테이너에서 **db** 컨테이너에 접속할 수 있다는 것임
+
 이제 **web** 컨테이너 안에서 `db:27017` 주소로 **db** 컨테이너의 MongoDB에 접속할 수 있다.
+
 	mongodb://db:27017/exampledb
-컨테이너 안에서 다른 컨테이너에 접속할 때는 `<별칭>:<포트번호` 형식으로 사용
+
+컨테이너 안에서 다른 컨테이너에 접속할 때는 `<별칭>:<포트번호>` 형식으로 사용
+
+네트워크를 생성하고 컨테이너를 연결시키면 해당 네트워크 안에 속한 컨테이너끼리 서로 접속할 수 있다.
+
+`docker network create` 명령으로 hello-network 생성
+
+	docker network create hello-network
+	438d1e96379f08b121740b3699d3122c1a23c369035ddb27d6af4b228421ff20
+
+DB 컨테이너를 생성하면서 hello-network에 연결
+
+	docker run --name db -d --network hello-network mongo
+	121bcb1cc89db9075e3c8468700cd932991230724b096e96fbe16567d736b88c
+
+web 컨테이너를 생성하면서 hello-network에 연결
+
+	sudo docker run --name web -d -p 80:80 --network hello-network nginx
+	e9a5c375749d228834dccf1606acf6db907420369ff667a5964dc17e1e28b911
+
+web 컨테이너에서 Bash 셸을 실행한 뒤에 ping을 실행
+
+	docker exec -it web bash
+	root@e9a5c375749d:/# ping db
+	
+	₩bash: ping: command not found₩ 흠...
+	이렇게 같은 네트워크에 속한 컨테이너끼리는 컨테이너 이름으로 접속할 수 있다.
+
+### 다른 서버의 Docker 컨테이너에 연결
+
+`--link` 옵션은 같은 서버의 컨테이너끼리 연결하는 옵션
+
+이번에는 앰배시더 컨테이너(Ambassador Container) 라는 것을 이용하여 다른 서버에 있는 컨테이너에 연결
+
+앰배시더 컨테이너는 특별한 컨테이너가 아닌 그냥 일반적인 Docker 컨테이너
+
+앰배시더 컨테이너는 socat 이라는 프로그램을 이용하여 TCP 연결을 다른 곳으로 전달하도록 구성
+
+`docker run` 명령을 실행할 때 전달한 환경 변수를 이용하여 socat을 실행하는 셸 스크립트
+
+	CMD env | grep _TCP= | \
+	    sed 's/.*_PORT_\([0-9]*\)_TCP=tcp:\/\/\(.*\):\(.*\)/socat \
+	TCP4-LISTEN:\1,fork,reuseaddr TCP4:\2:\3 \&/'  \
+	    | sh && top
+
+`docker run` 명령에서 `--link` 옵션을 사용하거나 `-e EXAMPLE_PORT_1234_TCP=tcp://192.168.0.10:1234` 라고 설정 해주면 다음과 같이 환경 변수에 포트 정보가 설전된다.
+
+`env` 명령으로 환경 변수를 출력하고 
+
+`grep` 명령으로 *_TCP*=를 포함하는 문자열을 찾음.
+
+`sen` 명령으로 정규표현식을 사용하여 문자열에서 포트 번호와 IP 주소를 추출
+
+추출한 포트 번호와 IP  주소룰을 이용하여 soct 명령을 실행
+
+	EXAMPLE_PORT=tcp://192.168.0.10:1234
+	EXAMPLE_PORT_1234_TCP_ADDR=192.168.0.10
+	EXAMPLE_NAME=/example_ambassador/example
+	HOSTNAME=0cf479687cb0
+	EXAMPLE_PORT_1234_TCP_PORT=1234
+	HOME=/
+	EXAMPLE_PORT_1234_TCP_PROTO=tcp
+	EXAMPLE_PORT_1234_TCP=tcp://192.168.0.10:1234
+	TERM=xterm
+	PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+	PWD=/
+
+**앰배서터 패턴(Ambassador Pattern)란**
+
+- 위 예제의 환경에서 `socat` 명령으로 로컬의 TCP 프로토콜 1234번 포트를 192.168.0.10 의 1234번 포트로 데이터를 전달하도록 설정하는 것
+- 컨테이너에서 포트를 노출시키러면 해당  서버의 IP 주소나 도메인을 알아야한다.
+- 이렇게 되면 작성한 애플리케이션의 소스 레벨에서 IP주소나 도메인을 설정해주어야 한다.
+- 앰배서더 컨데이너를 이용하면 별칭으로 접근하므로 서버의 IP주소, 도메인이 바뀌어도 소스 수정하지 않아도 된다.
+- 즉 외부에 있는 서버라도 같은 서버의 Docker 내부망에 있는 것과 같은 효과가 난다.
+
+**socat**
+
+**SOcket** **CAT**을 뜻하며 소켓 통신을 다른 채널로 전달하는 프로그램
+
+- 채널
+    - 파일, 파이프, 장치(시리얼, pseudo 터미널 등), 소켓(유닉스 소켓, TCP, UDP 등)이 있다.
+
+앰배시터 컨테이너를 이용해서 다른 서버의 컨테이너에 연결해 보겠다. 
+
+원활한 테스트를 위해 Redis를 사용하겠다.
+
+	docker pull redis:latest
+	docker run -d --name redis redis:latest
+	dd8388a1619882bd0fd79606020b860d857fc726fdfb8ded6c61c41eeca408cf
+
+`--name redis` 옵션으로 컨테이너 이름을 **redis**로 지정
+
+	Redis 컨테이너를 위해 앰배서더 컨테이너 생성
+	docker run -d --link redis:redis --name redis_ambassador \
+	    -p 6379:6379 svendowideit/ambassador
+
+`-d` 옵션으로 컨테이너를 백그라운드로 실행
+
+`--link redis:redis` 옵션으로 **redis** 컨테이너를 **redis** 별칭으로 연결
+
+`--name redis_ambassador` 옵션으로 컨테이너 이름을 `redis_ambassador`로 지정
+
+`p 6379:6379` 옵션으로 컨테이너의 **6379**번 포트와 호스트의 **6379** 연결하고 외부에 노출한다.
+
+Docker Hub에 있는 svendowideit/ambassador 이미지를 받은 뒤 컨테이너로 생성(docker run 명령은 로컬에 이미지가 없으면 자동으로 이미지를 받아온다.)
+
+	Redis 클라이언트를 사용할 컴퓨터에서 앰배서더 컨테이너 생성
+	Redis 서버의 IP 주소는 192.168.0.10
+	
+	docker run -d --name redis_ambassador --expose 6379 \
+	    -e REDIS_PORT_6379_TCP=tcp://192.168.0.10:6379 svendowideit/ambassador
+	3a8872a37856a5116e9209d945d3875d76656ed840a1007cfb90ae6aa410ea01
+
+
+`--name redis_ambassador` 옵션으로 컨테이너 이름을 **redis_ambassador**로 지정
+
+`--expose 6379` 옵션으로 다른 컨테이너에서 6379번 포트에 연결할 수 있도록 설정
+
+즉 Redis 클라리언트가 이 redis_ambassador 컨테이너의 6379 포트에 접속하게 된다.
+
+`--expose` 옵션은 `-p` 옵션과는 달리 호스트의 포트를 외부에 노출하지 않는다.
+
+`-e REDIS_POST_6379_TCP=tcp://192.168.0.10:6379` 옵션으로 IP 주소와 포트를 설정하여 다른 서버에 있는 redis_ambassador  컨테이너에 연결
+
+Docker Hub에 있는 svendowideit/ambassador 이미지 받은 뒤 컨테이너로 실행
+
+Docker Hub에 Redis 클라이언트만 들어있는 컨테이너도 있다.
+
+이 컨테이너를 이용하여 redis_amassador 컨테이너에 접속
+
+	docker run -i -t --rm --link redis_ambassador:redis relateiq/redis-cli
+
+`-i` `-t` 옵션으로 콘솔에서 입출력을 할 수 있도록 설정
+
+`--rm` 옵션으로 컨테이너를 실행만 하고 컨테이너 자체는 삭제(Redis 클라이언트처럼 1회성으로 사용할 때 편리)
+
+`--link redis_ambassador:redis` 옵션으로 redis_ambassador 컨테이너를 redis 별칭으로 연결
+
+Docker Hub에 있는 relateiq/redis-cli 이미지를 받은 뒤 컨테이너로 실행
+
+Redis 클라이언트가 실행되면 `ping`  명령을 입력
+
+	결과로 PONG이 출력되면 다른 서버의 Redis 컨테이너에 정상적으로 연결된 것 
+		
+	redis 172.17.0.4:6379> ping ...왜 ping이 안쳐지는가..
+	PONG
+	redis 172.17.0.4:6379>
 
