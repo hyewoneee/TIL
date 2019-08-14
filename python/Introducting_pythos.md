@@ -5,7 +5,7 @@
 - [x] 1장. 파이(Py) 맛보기
 - [x] 2장. 파이 재료: 숫자, 문자열, 변수
 - [x] 3장. 파이 채우기: 리스트, 튜플, 딕셔너리, 셋
-- [ ] 4장. 파이 크러스트: 코드 구조
+- [x] 4장. 파이 크러스트: 코드 구조
 - [ ] 5장. 파이 포장하기: 모듈, 패키지, 프로그램
 - [ ] 6장. 객체와클래스
 - [ ] 7장. 데이터 주무르기
@@ -774,6 +774,7 @@
 네임스페이스는 **특정 이름**이 유일
 다른 네임스페임스에서의 **같은 이름과 관계가 없는 것**
 함수로부터 전역변수(global variable)의 값을 얻을 수 있다.
+
 	animal = 'fruitbat'
 	def print_global():
 	    print('inside print_global', animal)
@@ -784,6 +785,7 @@
 	inside print_global fruitbat
 
 함수에서 전역 변수의 값을 얻어서 바꾸려 하면 에러 발생
+
 	def chage_and_print_global():
 	    print('inside change_and_print_global', animal)
 	    animal = 'wombat'
@@ -811,4 +813,273 @@
 
 함수 내의 `지역 변수(local variable)`가 아닌 전역 변수를 접근하기 위해 `global 키워드`를 사용해서 **전역변수의 접근을 명시**
 - 파이썬 철학: **명확한것이 함축적인 것보다 낫다.**
+
+	def change_and_print_global():
+	    global animal
+	    animal = 'wombat'
+	    print('inside change_and_print_global:', animal)
+	    
+	animal
+	'fruitbat'
+	
+	change_and_print_global()
+	inside change_and_print_global: wombat
+	animal
+	'wombat'
+
+함수 안에 global 키워드를 사용하지 않으면 파이썬은 **로컬 네임스페이스**를 사용하고
+
+변수는 지역 변수가 된다.
+
+**지역 변수는 함수를 수행한 뒤 사라짐**
+
+파이썬은 네임스페이스의 내용을 접근하기 위해 두 가지 함수 제공
+
+	loclas() 함수는 로컬 네임스페이스의 내용이 담긴 딕셔너리를 반환
+	globals() 함수는 글로벌 네임스페이스의 내용이 담긴 딕셔너리를 반환
+
+	animal = 'fruitbat'
+	def change_local():
+			지역변수
+	    animal = 'wombat'
+	    print('locals:', locals())
+	    
+	animal
+	'fruitbat'
+	change_local()
+	locals: {'animal': 'wombat'}
+
+### 이름에 _와 __ 사용
+
+두 언더스코어 `(__)` 로 시작하고 끝나는 이름은 파이썬 내의 사용을 위해 **예약**되어 있다.
+
+그러므로 변수를 선언할 때 두 언더스코어를 사용하면 **안 된다**.
+
+애플리케이션 개발자들이 이와 같은 변수 이름을 선택할 가능성이 낮아, 이러한 네이밍 패턴을 선택 한 것
+
+	def amazing():
+		'''This is the amazing function.
+		Want to see it again?'''
+		함수의 이름은 시스템 변수 fuction.__name__
+		함수의 doccscring은 function.__doc__
+		print('This function is named:', amazing.__name__)
+		print('And its docstring is:', amazing.__doc__)
+		    
+	amazing()
+	This function is named: amazing
+	And its docstring is: This is the amazing function.
+
+메인 프로그램은 특별한 이름 `__main__` 으로 할당
+
+### 에러 처리하기: try, except
+
+파이썬에서는 관련 에러가 발생할 때 실행되는 코드인 **예외(exception)**를 사용함
+
+	short_list = [1,2,3]
+	position = 5
+	short_list[positioni]
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	NameError: name 'positioni' is not defined
+
+에러가 발생하도록 코드를 내버려두는 것보다, 에러가 예상되는 코드에 `try문`을 사용하고, 
+
+그 에러를 처리하기 위해 `except문`을 사용
+
+	try:
+	    short_list[position]
+	except:
+	    print('Need a position between 0 and', len(short_list)-1, 'but got', position)
+	    
+	Need a position between 0 and 2 but got 5
+
+`except` 문을 지정하는 것은 모든 예외타입을 잡는 것
+
+두 개 이상의 예외 타입이 발생하면 각각 별도의 예외 핸들러를 제공하는 것이 가장 좋은 방법
+
+예외 타입을 넘어 예외사항에 대한 **세부정보**를 얻고 싶다면 다음과 같이 **변수** 이름에서 예외 객체 전체를 얻을 수 있다.
+
+`except 예외 타입 as 이름`
+
+---
+
+# 5장. 파이 포장하기: 모듈, 패키지, 프로그램
+
+### 모듈과 impot 문
+
+import 문을 사용하여 다른 모듈의 코드를 참조
+
+이것은 임포트한 모듈의 코드와 변수를 프로그램에서 사용할 수 있게 만들어준다.
+
+import문을 사용하여 간단하게 **모듈**을 임포트 할 수 있다.
+
+모듈은 `.py` 확장자가 없는 파이썬 파일의 이름이다.
+
+코드의 모든 의존성을 명시하기 위해 모든 import문을 파일의 맨 앞에 두는 것을 선호
+
+모듈에 **앨리어스(alias)**를 사용 가능하다
+
+	import reposrt as wr
+	wr.함수이름
+
+### 패키지
+
+파이썬 애플리케이션을 좀 더 확장 가능하게 만들기 위해 모듈을 **패키지(package)**라는 파일 계층 구조에 구성할 수 있다.
+
+디렉터리에 `__init__.py` 파일이 필요하다.
+
+이 파일은 내용은 비워도 되지만, 파이썬은 이 파일을 포함하는 디렉터리를 패키지로 간주한다.
+
+### 누락된 키 처리하기: setdefault(), defaultdict()
+
+존재하지 않는 키로 딕셔너리에 접근하려면 예외가 발생
+
+기본값을 반환하는 딕셔너리의 get() 함수를 사용하면 예외를 피할 수 있다.
+
+**setdefault()함수**는 get() 함수와 같지만, 키가 누락된 경우 딕셔너리에 항목을 할당할 수 있다.
+
+	periodic_table = {'Hydrogen':1, 'Helium':2}
+	print(periodic_table)
+	{'Hydrogen': 1, 'Helium': 2}
+	
+	딕셔너리에 키가 없는경우 새 값이 사용된다.
+	carbon = periodic_table.setdefault('Carbon', 12)
+	carbon
+	12
+	periodic_table
+	{'Hydrogen': 1, 'Helium': 2, 'Carbon': 12}
+
+**존재하는** 키에 다른 기본값을 할당하려 하면 키에 대한 원래 값이 반환되고 아무것도 바꾸지 않는다.
+
+	helium = periodic_table.setdefault('Helium', 947)
+	helium
+	2
+	periodic_table
+	{'Hydrogen': 1, 'Helium': 2, 'Carbon': 12}
+
+defaultdict() 함수도 비슷하지만 다른 점은 딕셔너리를 생성할 때 모든 새 키에 대한 기본값을 먼저 지정한다.
+
+이 함수의 인자는 함수다.
+
+int()함수를 호출하고 정수 0을 반환하는 함수 int를 전달
+
+	from collections import defaultdict
+	periodic_table = defaultdict(int)
+	
+	periodic_table=['Hydrogen'] = 1
+	  File "<input>", line 1
+	SyntaxError: can't assign to literal
+	periodic_table['Lead']
+	0
+	periodic_table
+	defaultdict(<class 'int'>, {'Lead': 0})
+
+defaultdict()의 인자는 값을 누락된 키에 할당하여 반환하는 함수다.
+
+	def no_idea():
+	    return 'Hub?'
+	
+	bestiary['A'] = 'Abominable snowman'
+	bestiary['B'] = 'Basilisk'
+	
+	bestiary['A']
+	'Abominable snowman'
+	bestiary['B']
+	'Basilisk'
+	
+	bestiary['C']
+	'Hub?'
+
+빈 기본 값을 반환하기 위해 
+
+`int()` 함수는 `정수 0`
+
+`list()` 함수는 `빈 리스트([])`
+
+`dict()` 함수는 `빈 딕셔너라 ({})`
+
+인자를 입력하지 않으면 새로운 키의 초깃값이 None으로 설정
+
+lamda를 사용하여 인자에 기본값을 만드는 함수를 정의 할 수 있다.
+
+	bestiary = defaultdict(lambda: 'Hub?')
+	bestiary['E']
+	'Hub?'
+
+카운터를 만들기 위해 아래와 같이 int 함수를 사용할 수 있다.
+
+	food_counter = defaultdict(int)
+	for food in ['spam', 'spam', 'eggs', 'spam']:
+	    food_counter[food] += 1
+	    
+	
+	for food, count in food_counter.items():
+	    print(food,count)
+	    
+	spam 3
+	eggs 1
+
+위의 예제에서 food_counter 딕셔너리가 defaultdict가 아닌 일반 딕셔너리였다면,
+
+파이썬은 딕셔너리 요소의 food_counter[food]를 증가시키려고 할 때마다 예외를 발생시킨다.
+
+딕셔녀리가 초기되지 않았기 때문이다.
+
+예외를 피하려면 다음과 같은 추가 작업이 필요
+
+	dict_counter = {}
+	for food in ['spam', 'spam', 'eggs', 'spam']:
+	    if not food in dict_counter:
+		dict_counter[food] = 0
+		dict_counter[food] += 1
+		    
+	for food, count in dict_counter.items():
+	    print(food, count)
+	    
+	spam 3
+	eggs 1
+
+### 항목세기: Counter()
+
+**most_common()**함수는 모든 요소를 내림차순으로 반환 
+
+- 숫자를 입력하는 경우, 그 숫자만큼 상위 요소를 반환
+
+항목을 셀 수 있는 예제
+
+	from collections import Counter
+	breakfast = ['spam', 'spam', 'eggs', 'spam']
+	breakfast_counter = Counter(breakfast)
+	breakfast_counter
+	Counter({'spam': 3, 'eggs': 1})
+	
+	breakfast_counter.most_common()
+	[('spam', 3), ('eggs', 1)]
+	breakfast_counter.most_common(1)
+	[('spam', 3)]
+	
+	lunch = ['eggs', 'eggs', 'bacon']
+	lunch_counter = Counter(lunch)
+	lunch_counter
+	Counter({'eggs': 2, 'bacon': 1})
+	
+	+ 연산자를 사용하여 두 카운터를 결함
+	breakfast_counter + lunch_counter
+	Counter({'spam': 3, 'eggs': 3, 'bacon': 1})
+	
+	- 연산자를 사용하여 한 카운터에서 다른 카운터를 뺄 수 있다.
+	breakfast_counter - lunch_counter
+	Counter({'spam': 3})
+
+	인터렉션 연산자 & 를 사용해서 공통된 항목을 얻을 수 있다.
+	breakfast_counter & lunch_counter
+	Counter({'eggs': 1})
+	
+	유니온 연산자 | 를 사용하여 모든 항목을 얻을 수 있다.
+	breakfast_counter | lunch_counter
+	Counter({'spam': 3, 'eggs': 2, 'bacon': 1})
+	
+	`eggs` 가 다시 두 카운터의 공통항목으로 나왔다.
+	유니온 연산에서는 breadfast_counter의 `eggs` 가 추가되지 않고 대신 높은 숫자의 공통 항목을 선택
+
 
