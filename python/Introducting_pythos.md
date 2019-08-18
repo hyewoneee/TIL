@@ -6,7 +6,7 @@
 - [x] 2장. 파이 재료: 숫자, 문자열, 변수
 - [x] 3장. 파이 채우기: 리스트, 튜플, 딕셔너리, 셋
 - [x] 4장. 파이 크러스트: 코드 구조
-- [ ] 5장. 파이 포장하기: 모듈, 패키지, 프로그램
+- [x] 5장. 파이 포장하기: 모듈, 패키지, 프로그램
 - [ ] 6장. 객체와클래스
 - [ ] 7장. 데이터 주무르기
 - [ ] 8장. 흘러가는 데이터
@@ -1194,5 +1194,304 @@ lamda를 사용하여 인자에 기본값을 만드는 함수를 정의 할 수 
 	
 	`eggs` 가 다시 두 카운터의 공통항목으로 나왔다.
 	유니온 연산에서는 breadfast_counter의 `eggs` 가 추가되지 않고 대신 높은 숫자의 공통 항목을 선택
+
+### 키 정렬하기: OrderedDict()
+
+**OrderDict()** 함수는 키의 추가 순서를 기억
+
+이터레이터로부터 **순서**대로 키값을 반환 
+
+### 스택 + 큐 == 데크
+
+**데크**는 스택과 큐의 기능을 모두 가진 출입구가 양 끝에 있는 큐
+
+데크는 시퀀스의 양 끝으로부터 항목을 추가하거나 삭제할 때 유용하게 쓰인다.
+
+`popleft()` 함수는 데크로부터 왼쪽 끝의 항목을 제거한 후, 그 항목을 반환
+
+`pop()` 함수는 오른쪽 끝의 항목을 제거한 후, 그 항목을 반환
+
+	from collections import deque
+	def palindrome(word):
+	    dq = deque(word)
+	    while len(dq) > 1:
+	        if dq.popleft() != dq.pop():
+	            return False
+	        return True
+	   	
+	palindrome('racecar')
+	True
+	palindrome('radar')
+	True
+	palindrome('halibut')
+	False
+
+### 코드 구조 순회하기 : itertools
+
+`itertools`는 특수 목적의 이터레이터 함수를 포함하고 있다.
+
+`for ... in` 루프에서 이터레이터 함수를 호출할 때 함수는 한 번에 한 항목을 반환하고 호출 상태를 기억한다.
+
+**itertools 모듈**은 시간을 단축할 수 있는 조합과 순열에 대한 더 많은 함수를 제공
+
+	chain() 함수는 순회 가능한 인자들을 하나씩 반환
+	import itertools
+	for item in itertools.chain([1,2], ['a', 'b']):
+	    print(item)
+	    
+	1
+	2
+	a
+	b
+	
+	cycle() 함수는 인자를 순환하는 무한 이터레이터
+	for item in itertools.cycle([1,2[):
+	    print(item)
+	1
+	2
+	1
+	2
+	......
+	
+	accumulate() 함수는 축척된 값을 계산
+	기본적으로 합계를 계산
+	for item in itertools.accumulate([1,2,3,4]):
+	    print(item)
+	    
+	1
+	3
+	6
+	10
+	
+	accumulate() 함수의 두 번째 인자로 함수를 전달하여, 합꼐를 구하는 대신 이 함수를 사용
+	이 함수는 두 개의인자를 취하여 하나의 결과를 반환
+	축적된 곱을 계산
+	for item in itertools.accumulate([1,2,3,4], multiply):
+	    print(item)
+	    
+	1
+	2
+	6
+	24
+
+### 배터리 장착: 다른 파이썬 코드 가져오기
+
+파이썬은 전 세계적으로 써드파티 오픈소스가 있다.
+
+- PyPI
+- github
+- readthedocs
+
+activestate 사이트에서 작은 코드 예제를 많이 찾을 수 있다.
+
+---
+### 객체란 무엇인가?
+
+숫자에서 모듈까지 파이썬의 모든 것이 객체
+
+객체는 데이터(변수, 속성이라고 부름)와 코드(함수, 메섣라고 부름)를 모두 포함
+
+객체를 명사 , 메서드를 동사라고 생각하자.
+
+객체는 각각의 사물을 나타내고, 메서드는 다른 사물과 어떻게 상호작용하는지 정의한다.
+
+모둘과 달리, 객체는 각자 다른 값을 가진 속성의 객체를 동시에 여러 개 생성할 수 있다.
+
+### 클래스 선언하기
+
+커스텀 객체를 생성하기 위해 먼저 class 키워드로 클래스 정의
+
+	class Person():
+	    pass
+		
+	함수처럼 클래스 이름을 호출하여 클래스로부터 객체를 생성할 수 있다.
+	someone = Person()
+
+Person() 은 Person 클래스로부터 개별 객체를 생성하고, 
+
+someone의 변수에 이 객체를 할당한다.
+
+파이썬 객체 초기화 메서드 `__init__` 을 포함시킨다.
+
+	아무것도 하지 않는 객체일 뿐
+	class Person():
+	    def __init__(self):
+	        pass
+	
+	name 매개변수를 초기화 메서드에 추가
+	name 매개변수에 문자열을 전달하여 Person 클래스로부터 객체를 생성할 수 있다.
+	class Person():
+	    	def __init__(self, name):
+	        self.name = name
+
+- `__init__()` 은 특별한 메서드 이름이다.
+
+- 이 메서드는 클래스의 정의로부터 객체를 초기화 한다.
+
+- `self`  인자는 객체 자신을 가르킨다.
+
+클래스에서 `__init__()` 을 정의할 때, 첫 번째 매개변수는 `self` 여야한다.
+
+비록 파이썬에서 `self` 는 예약어가 아니지만, 일반적으로 이렇게 사용한다.
+
+	hunter = Person('Elmer Fudd')
+	
+	print('The mighty hunter:', hunter.name)
+	The mighty hunter: Elmer Fudd
+
+위의 코드가 어떻게 동작하는지 살펴본다.
+
+- Person 클래스의 정의를 찾는다.
+- 새 객체를 메모리에 초기화(생성)
+- 객체의 `__init__` 메서드를 호출
+- 새롭게 생성된 객체를 `self` 에 전달
+- 인자 ('Elmer Fuud')를 name에 전달
+- 객체에 name 값을 저장한다.
+- 새로운 객체를 반환한다.
+- hunter에 이 객체를 연결한다.
+
+이 새로운 객체는 파이썬의 다른 객체의 생성 과정과 같다.
+
+이 객체는 리스트. 튜플, 딕셔너리, 셋의 요소로 사용할 수 있다.
+
+이 객체를 함수에 인자로 전달할 수 있고, 함수에서 그 결과를 반환할 수 있다.
+
+모든 클래스 정의에서 `__init__` 메서드를 가질 필요는 **없다.**
+
+`__init__` 메서드는 같은 클래스에서 생성된 다른 객체를 구분하기 위해 필요한 다른 뭔가를 수행한다.
+
+### 상속
+
+상속을 이용하면 새로운 클래스는 기존 클래스를 복사하지 않고, 기존 클래스의 모든 코드를 쓸 수 있다.
+
+기존 클래스에 일부를 추가하거나 변경하여 새 클래스를 생성한다. 이것은 코드를 재 사용하는 아주 좋은 방법이다.
+
+기존 클래스의 행동을 오버라이드(재정의)한다.
+
+- 필요한 것만 추가/변경하여 새 클래스를 정의
+
+기존 클래스는 **부모 클래스**, **슈퍼 클래스**, **베이스 클래스**라 부른다.
+
+새 클래스는 **자식 클래스**, **서브 클래스**, **파생된 클래스** 부른다.
+
+이 용어들은 객체 지향 프로그래밍에서 다르게 사용될 수 있다.
+
+	class Car():
+	    def exclaim(self):
+	        print("I',=m a Car!")
+	        
+	class Yugo(Car):
+	    pass
+	
+	give_me_a_car = Car()
+	give_me_a_yugo = Yugo()
+	
+	give_me_a_car.exclaim()
+	I',=m a Car!
+	give_me_a_yugo.exclaim()
+	I',=m a Car!
+	
+	자식 클래스는 부모 클래스를 구체화 한 것 
+	
+	객체 지향 용어로 **Yugo**는 **Car**다.
+	
+	give_me_a_yugo 객체는 Yugo 클래스의 인스턴스지만, 또한 Car 클래스가 할 수 있는 어떤 것을 상속받는다.
+	
+### 메서드 오버라이드
+
+위의 예제에서 Yugo에 대한 exclaim() 메서드를 어떻게 바꾸는지 살펴보자.
+
+	class Yugo(Car):
+	    def exclaim(self):
+	        print("I'm a Yugo! Much like a Car, but more Yugo-ish.")
+	        	
+	두 클래스로부터 각각 객체를 생성
+	give_me_a_car = Car()
+	give_me_a_yugo = Yugo()
+	
+	각 객체의 exclaim() 메서드를 호출
+	give_me_a_car.exclaim()
+	I',=m a Car!
+	give_me_a_yugo.exclaim()
+	I'm a Yugo! Much like a Car, but more Yugo-ish.
+
+이 예제에서 exclaim() 메서드를 오버라이드 했다.
+
+`__init__()` 메서드를 포함한 모든 메서드를 오버라이드 할 수 있다.
+
+### 메서드 추가하기
+
+자식 클래스는 또한 부모 클래스에 없는 메서드를 **추가**할 수 있다.
+
+	위의 예제에서 Yugo 클래스에만 새로운 메서드 need_a_push()를 정의
+	class Yugo(Car):
+	    def exclaim(self):
+	        print("I'm a Yugo! Much like a Car, but more Yugo-ish.")
+	    def need_a_push(self):
+	        print("A little help here?")
+	
+	give_me_a_car = Car()
+	give_me_a_yugo = Yugo()
+	
+	Yugo 객체는 need_a_push() 메서드 호출에 대답할 수 있다.
+	give_me_a_yugo.need_a_push()
+	A little help here?
+	
+	그러나 제네릭 Car 객체는 need_a_push() 메서드를 호출할 수 없다.
+	give_me_a_car.need_a_push()
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: 'Car' object has no attribute 'need_a_push'
+
+Yugo는 Car가 하지 못하는 뭔가를 할 수 있으며, Yugo의 독특한 개성을 나타낼 수 있다.
+
+### 부모에게 도움 받기: super
+
+자식 클래스에서 부모 클래스의 매서드를 호출하고 싶다면 `supper()` 메서드를 사용
+
+	class Person():
+	    def __init__(self, name):
+	        self.name = name
+	
+	서브 클래스의 __init__() 메서드에 email 매개변수가 추가되었다.
+	class EmailPerson(Person):
+	    def __init__(self, name, email):
+	        super().__init__(name)
+	        self.email = email
+
+자식 클래스에서 `__init__()` 메서드를 정의 하면 부모 클래스의 `__init__()` 매서드를 대체하는 것이기 때문에 더이상 자동으로 부모 클래스의 `__init__()` 메서드가 호출되지 않는다.
+
+그러므로 이것을 명시적으로 호출해야한다.
+
+위의 예제가 어떻게 동작하는지 살펴본다.
+
+- `super()` 메서드는 **부모 클래스(Person)의 정의**를 얻는다.
+- `__init__()` 메서드는 `Person.__init__()` 메서드를 호출한다.
+- 이 메서드는 `self` 인자를 슈퍼 클래스로 전달하는 역할을 한다.
+- 그러므로 슈퍼 클래스에 어떤 선택적 인자를 제공하기만 하면 된다.
+- 이 경우 `Person()`에서 받은 인자는 `name`이다.
+- `self.email = email` 은 EmailPerson 클래스를 Person 클래스와 다르게 만들어주는새로운 코드다.
+
+EmailPerson 객체를 만들어 보자.
+
+	bob = EmailPerson('Bob', 'test.com')
+	
+	name과 email 속성에 접근 할 수 있다.
+	bob.name
+	'Bob'
+	bob.email
+	'test.com'
+
+왜 자식 클래스에서 다음과 같이 정의하지 않았을까?
+
+	class EmailPerson(Person):
+	    def __init__(self, name, email):
+	        self.name = name
+	        self.email = email
+
+- 위와 같이 정의할 수 있지만, 상속을 사용할 수 없게 된다.
+- 일반 Person 객체와 마찬가지로 Person 클래스를 활용하기 위해 `super()`를 사용했다(?)
+- `super()` 메서드 사용에 대한 다른 이점이 있다.
+- 만약 Person 클래스의 정의가 나중에 바꾸면 Person 클래스로부터 상속받은 EmailPerson 클래스의 속성과 메서드에 변경사항이 반영된다.
 
 
