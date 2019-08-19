@@ -1494,4 +1494,176 @@ EmailPerson 객체를 만들어 보자.
 - `super()` 메서드 사용에 대한 다른 이점이 있다.
 - 만약 Person 클래스의 정의가 나중에 바꾸면 Person 클래스로부터 상속받은 EmailPerson 클래스의 속성과 메서드에 변경사항이 반영된다.
 
+### 자신: self
+
+파이선은 적절한 객체의 속성과 메서드를 찾기 위해 `self` 인자를 사용
+
+	car = Car()
+	car.exclaim()
+	I'm a Car!
+
+- car 객체의 Car 클래스를 찾는다.
+- car 객체를 Car 클래스의 exclaim() 메서드의 self 매개 변수에 전달
+
+### get/set 속성값과 프로퍼티
+
+객체 지향 언어에서는 외부로부터 바로 접근할 수 없는 `private` 객체 속성을 지원
+
+프로그래머는 `private` 속성의 값을 읽고 쓰기 위해 `getter` 메서드와 setter 메서드를 사용
+
+파이썬에서는 `getter` 나 `setter` 메서드가 필요 없다.
+
+왜냐하면 모든 속성과 메서드는 `public`이기 때문이다.
+
+만약 속성에 직접 접근하는 것이 부담스럽다면 `getter` 와 `setter` 메서드를 작성할 수 있다.
+
+그러나 파이써닉하게 `프로퍼티(property)`를 사용하자!
+
+hidden_name이라는 속성으로 Duck 클래스를 적용해보는 예제
+
+이 속성을 외부에서 직접 접근하지 못하도록 `getter(get_name())`와 `setter(set_name())` 메서드를 정의
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.hidden_name = input_name
+		def get_name(self):
+		        print('inside the getter')
+	        	return self.hidden_name
+	    def set_name(self, input_name):
+	        print('inside the setter')
+	        self.hidden_name = input_name
+
+	property()의 첫 번째 인자는 getter 메서드, 두 번째 인자는 setter 메서드
+	name = property(get_name, set_name)
+
+Duck 객체의 name을 참조할 때 get_name() 메서드를 호출해서 hidden_name 값을 반환
+
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	
+	보통의 getter 메서드처럼 get_name() 메서드를 직접 호출 가능
+	
+	fowl.get_name()
+	inside the getter
+	'Howard'
+	
+	name 속성에 값을 할당하면 set_name() 메서드를 호출
+	
+	fowl.name = 'Daffy'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Daffy'
+	
+	set_name() 메서드를 여전히 직접 호출할 수 있다.
+	
+	fowl.set_name('Daffy')
+	inside the setter
+	fowl.name
+	inside the getter
+	'Daffy'
+
+프로퍼티를 정의하는 또 다른 방법은 **데커레이터** 사용
+
+- `getter` 메서드 앞에 `@property` 데커레이터 사용
+- `setter` 메서드 앞에 `@name.setter` 데커레이터 사용
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.hidden_name = input_name
+	    @property
+	    def name(self):
+	        print('inside the getter')
+	        return self.hidden_name
+	    @name.setter
+	    def name(self, input_name):
+	        print('inside the setter')
+	        self.hidden_name = input_name
+	
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	fowl.name = 'Donald'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Donald'
+
+프로퍼티 또 한 **계산된 값** 참조 가능
+
+	class Circle():
+	    def __init__(self, radius):
+	        self.radius = radius
+	    @property
+	    def diameter(self):
+	        return 2 * self.radius
+	    
+	radisu 속성의 초깃값으로 Circle 객체를 만듦
+	c = Circle(5)
+	c.radius
+	5
+	
+	radius와 같은 속성처럼 diameter를 참조 가능
+	c.diameter
+	10
+	
+	속성에 대한 settr 프로퍼티를 명시하지 않는다면 외부로부터 이 속성을 설정할 수 없다.
+	이것은 읽기 전용이다.
+	c.diameter = 20
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: can't set attribute
+
+직접 속성을 접근하는 것보다 프로퍼티를 통해서 접근하면 큰 이점이 있다.
+
+예를 들어 만약 속성의 정의를 바꾸려면 모든 호출자를 수정할 필요 없이 클래스 정의에 있는 코드만 수정하면 된다.
+
+### private 네임 맹글링
+
+파이썬은 클래스 정의 외부에서 볼 수 없도록 하는 속성에 대한 네이밍 컨벤션(namaing convention)이 있다.
+
+위의 예제를 수정해 본다.
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.__name = input_name
+	    @property
+	    def name(self):
+	        print('inside the getter')
+	        return self.__name
+	    @name.setter
+	    def name(self, input_name):
+	        print('inside the setter')
+	        self.__name = input_name
+	
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	fowl.name = 'Donald'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Donald'
+
+`__name` 속성을 바로 접근 할 수 없다.
+
+	fowl.__name
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: 'Duck' object has no attribute '__name'
+
+네이밍 컨벤션은 속성을 private로 만들지 않지만, 파이썬은 이 속성이 우연히 외부 코드에서 발견할 수 없도록 이름을 **맹글링(mangling)** 했다.
+
+
+	fowl._Duck__name
+	'Donald'
+
+inside the getter를 출력하지 않았다.
+
+이것이 속성을 완벽하게 보호할 수는 없지만, 네임 맹글링은 속성의 의도적인 직접 접근을 어렵게 만든다.
+
 
