@@ -7,7 +7,7 @@
 - [x] 3장. 파이 채우기: 리스트, 튜플, 딕셔너리, 셋
 - [x] 4장. 파이 크러스트: 코드 구조
 - [x] 5장. 파이 포장하기: 모듈, 패키지, 프로그램
-- [ ] 6장. 객체와클래스
+- [x] 6장. 객체와클래스
 - [ ] 7장. 데이터 주무르기
 - [ ] 8장. 흘러가는 데이터
 - [ ] 9장. 웹
@@ -1665,5 +1665,242 @@ Duck 객체의 name을 참조할 때 get_name() 메서드를 호출해서 hidden
 inside the getter를 출력하지 않았다.
 
 이것이 속성을 완벽하게 보호할 수는 없지만, 네임 맹글링은 속성의 의도적인 직접 접근을 어렵게 만든다.
+
+### 메서드 타입
+
+어떤 데이터(**속성**)와 함수(**메서드**)는 클래스 자신의 일부이고, 
+
+어떤 것은 클래스로부터 생성된 객체의 일부다.
+
+**인스턴스 메서드**
+
+- 클래스 정의에서 메서드의 첫 번째 인자가 `self`라면 이 메서드는 **인스턴스 메서드** 다.
+- 일반적은 클래스를 생성할 때의 메서드 타입니다.
+
+인스턴스 메서드의 첫 번째 매개변수는 `self` 고, 파이썬은 이 메서드를 호출할 때 객체를 전달한다.
+
+**클래스 메서드**
+
+- **클래스 메서드**는 클래스 전체에 영향을 미친다.
+- 클래스 정의에서 함수에 **@classmethod** 데커레이터 사용
+- 첫 번째 매개변수는 클래스 자신이다.
+- 파이썬에서는 보통 이 클래스의 매개변수를 `cls` 로 쓴다.
+- class는 에약어기 때문에 사용할 수 없다.
+
+	class A():
+	    count = 0
+	    def __init__(self):
+	        A.count += 1
+	    def exclaim(self):
+	        print("I'm an A!")
+	    @classmethod
+	    def kids(cls):
+	        print("A has", cls.count, "little objects")
+	        
+	easy_a = A()
+	breezy_a = A()
+	wheezy_a = A()
+	A.kids()
+	A has 3 little objects
+
+`self.count(객체 인스턴스 속성)` 를 참조하기보다 **A.coutn(클래스속성)**를 참조했다.
+
+kids() 메서드에서 `A.count`를 사용할 수  있었지만 `cls.count`를 사용했다.
+
+**정적 메서드**
+
+클래스 정의에서 메서드의 세 번째 타입은 클래스나 객체에 영향을 미치지 못한다.
+
+이 메서드는 단지 편의를 위해 존재
+
+**정적 메서드**는 `@staticmethod`  데커레이터가 붙어 있다.
+
+첫 번째 매개변수로 `self`나 `cls`가 **없다**.
+
+	class CoyoteWeapon():
+	    @staticmethod
+	    def commercial():
+	        print('This CoyoteWeapon has been brought to you by Acme')
+	        
+	CoyoteWeapon.commercial()
+	This CoyoteWeapon has been brought to you by Acme
+
+이 메서드를 접근하기 위해 CoyoteWeapon 클래스에서 **객체를 생성할 필요가 없다**.
+
+**매우 클래시(class-y)하다**
+
+### 덕 타이핑
+
+파이썬은 **다형성(polymorphism)**을 느슨하게 구현했다.
+
+이것은 클래스에 상관없이 같은 동작을 다른 객체에 적용할 수 있다는 것
+
+세 Qoute 클래스에서 같은 `__init__()` 이니셜라이저를 사용
+
+클래스에 다음 두 메서드를 추가
+
+- `who()` 메서드는 저장된 person 문자열의 값을 반환
+- `says()` 메서드는 특정 구두점과 함께 저장된 words 문자열을 반환
+
+	class Quote():
+	    def __init__(self, person, words):
+	        self.person = person
+	        self.words = words
+	    def who(self):
+	        return self.person
+	    def says(self):
+	        return self.words + '.'
+	    
+	class QuestionQuote(Quote):
+	    def says(self):
+	        return self.words + '?'
+	    
+	class ExclamationQuote(Quote):
+	    def says(self):
+	        return self.words + '!'
+
+QuestionQuote와 ExclamationQuote 클래스에서 초기화 함수를 쓰지 않아,
+
+부모의 `__init__()` 메서드를 호출해서 **인스턴스 변수** `person`과 `words`를 저장한다.
+
+그러므로 **서브클래스** QuestonQuote와 ExclamationQuote에서 생성된 객체의 `self.words`에 접근할 수 있다.
+
+	hunter = Quote('Elmer Fudd', "I'm hunting wabbits")
+	print(hunter.who(), 'says:', hunter.says())
+	Elmer Fudd says: I'm hunting wabbits.
+	
+	hunter1 = QuestionQuote('Bugs Bunny', "What's up, doc")
+	print(hunter1.who(), 'says:', hunter1.says())
+	Bugs Bunny says: What's up, doc?
+	
+	hunted2 = ExclamationQuote('Daffy Duck', "It's rabbit season")
+	print(hunted2.who(), 'says:', hunted2.says())
+	Daffy Duck says: It's rabbit season!
+
+세 개의 서로 다른 `says()` 메서드는 세 클래스에 대해 서로 다른 동작을 제공
+
+이것은 객체 지향 언어에서 전통적인 다형성의 특징 
+
+파이썬은 `who()`와 `says()` 메서드를 갖고 있는 **모든** 객체에서 이 메서드들을 실행할 수 있게 해준다.
+
+	class BabblingBrook():
+	    def who(self):
+	        return 'Brook'
+	    def says(self):
+	        return 'Babble'
+	    
+	brook = BabblingBrook()
+	def who_says(obj):
+	    print(obj.who(), 'says', obj.says())
+
+다양한 객체의 `who()` 와 `says()` 메서드를 실행해보면 brook 객체는 다른 객체와 전혀 관계가 없는 것을 알 수 있다.
+
+	who_says(hunter)
+	Elmer Fudd says I'm hunting wabbits.
+	
+	who_says(hunter1)
+	Bugs Bunny says What's up, doc?
+	
+	who_says(hunted2)
+	Daffy Duck says It's rabbit season!
+
+예전부터 이러한 행위를 **덕 타이핑(duck typing)**이라고 불렀다.
+
+- 오리처럼 꽥꽥거리고 걷는다면, 그것은 오리다.
+
+### 특수 메서드
+
+파이썬의 **특수 메서드**를 사용하여 연산자를 사용할 수 있다.
+
+문자열을 비교하는 예제이다.
+
+	class Word():
+	    def __init__(self, text):
+	        self.text = text
+	    def equals(self, word2):
+	        return self.text.lower() == word2.text.lower()
+	    	
+	first = Word('ha')
+	second = Word('Ha')
+	third = Word('eh')
+	
+	first.equals(second)
+	True
+	first.equals(third)
+	False
+
+`equal()` 메서드를 특수 이름의 `__eq__()` 메서드로 바꿔보자
+
+	class Word():
+	    def __init__(self, text):
+	        self.text = text
+	    def __eq__(self, word2):
+	        return self.text.lower() == word2.text.lower()
+	    
+	first = Word('ha')
+	second = Word('HA')
+	third = Word('eh')
+	
+	first == second
+	True
+	first == third
+	False
+
+
+특수 메서드에 대해 좀 더 알고 싶다면 파이썬 문서를 참고
+
+### 컴포지션
+
+상속은 자식 클래스가 부모 클래스처럼 행동하고 싶을때 사용하는 좋은 기술이다(자식 is-a 부모).
+
+상속을 사용할 수 있지만, **컴포지션(composition)** 또는 **어그리게이션(aggregation)**의 사용이 더 적절한 경우가 있다**(X has-a Y)**.
+
+- 오리는 조류이지만 (오리 is-a 조류), 꼬리를 갖고 있다(오리 has-a 꼬리).
+- 꼬리는 오리에 속하지 않지만 오리의 일부
+
+	class Bill():
+	    def __init__(self, description):
+	        self.description = description
+	        
+	class Tail():
+	    def __init__(self, length):
+	        self.length = length
+	        
+	class Duck():
+	    def __init__(self, bill, tail):
+	        self.bill = bill
+	        self.tail = tail
+	    def about(self):
+	        print('This duck has a', self.bill.description, 'bill and a', self.tail.length, 'tail')
+	        
+	tail = Tail('long')
+	bill = Bill('wide orange')
+	duck = Duck(bill, tail)
+	
+	duck.about()
+	This duck has a wide orange bill and a long tail
+
+이 오리는 넓은 오랜지색 부리와 긴 꼬리를 가지고 있다.
+
+### 클래스와 객체, 그리고 모듈은 언제 사용할까?
+
+- 비슷한 행동(메서드)을 하지만 내부 상태(속성)가 다른 개별 인스턴스가 필요할때, 객체는 매우 유용
+- 클래스는 상속을 지원, 모듈은 상속을 지원하지 않는다.
+- 어떤 한 가지 일만 수행한다면 모듈이 가장 좋은 선택
+    - 프로그램에서 파이썬 모듈이 참조된 횟수에 상관없이 단 하나의 복사본만 불러온다.
+
+- 여러 함수에 인자로 전달될 수 있는 여러 값을 포함한 변수가 있다면, 클래스를 정의
+- 간단한 문제 해결방법을 사용
+    - 딕셔너리, 리스트, 튜플은 모듈보다 더 작고, 간단하며, 빠르다
+    - 일반적으로 모듈은 클래스보다 더 간단하다.
+
+귀도의 조언
+
+	자료구조를 과하게 엔지니어링 하는 것을 피하라.
+ 	객체보다 튜플이 낫다(네임드 튜플을 써봐라).
+ 	
+ 	getter/setter 함수보다 간단한 필드가 더 낫다.
+	내장된 데이터 타입, 숫자, 문자열, 튜플, 리스트, 셋, 딕셔너리를 사용하라.
+	또한 데크와 같은 컬렉션 라이브러리를 활용하라.
 
 
