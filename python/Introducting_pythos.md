@@ -1903,4 +1903,141 @@ QuestionQuote와 ExclamationQuote 클래스에서 초기화 함수를 쓰지 않
 	내장된 데이터 타입, 숫자, 문자열, 튜플, 리스트, 셋, 딕셔너리를 사용하라.
 	또한 데크와 같은 컬렉션 라이브러리를 활용하라.
 
+### 네임드 튜플
+
+네임드 튜플은 튜플의 서브클래스이다.
+
+이름(.name), 위치([offset]) 로 값에 접근할 수 있다.
+
+Duck 클래스를 **네임드 튜플**로, bill 과 tail 을 간단한 문자열 속성으로 변환 
+
+두 인자를 취하는 `namedtuple` 함수를 호출
+
+- 이름
+- 스페이스로 구분된 필드 이름의 문자열
+
+	from collections import namedtuple
+	Duck = namedtuple('Duck', 'bill tail')
+	duck = Duck('wide orange', 'long')
+	duck
+	Duck(bill='wide orange', tail='long')
+	duck.bill
+	'wide orange'
+	duck.tail
+	'long'
+
+딕셔너리에 네임드 튜플을 만들 수 있다
+
+	parts = {'bill': 'wide orange', 'tail':'long'}
+	duck2 = Duck(**parts)
+	duck2
+	Duck(bill='wide orange', tail='long')
+
+`**parts` 는 키워드 인자다.
+
+`parts` 딕셔너리에 키와 값을 추출하여 `Duck()` 의 인자로 제공
+
+다음 예제와 효과가 같다.
+
+	duck2 = Duck(bill='wide orange', tail='long')
+
+네임드 튜플은 불변한다. 하지만 필드를 바꿔서 또 다른 네임드 튜플을 반환 할 수 있다.
+
+딕셔너리는 네임드 튜플이 아니다.
+
+	duck.color = 'green'
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: 'Duck' object has no attribute 'color'
+
+**네임드 튜플의 특징**
+
+- 불변하는 객체처럼 행동한다.
+- 객체보다 공간 효율성과 시간 효율성이 더 좋다.
+- 딕셔너리 형식의 괄호([]) 대신, 점(.) 표기법으로 속성을 접근할 수 있다.
+- 네임드 튜플을 딕셔너리의 키 처럼 쓸 수 있다.
+
+---
+
+# 7장. 데이터 주무르기
+
+### 파이썬3 유니코드 문자열
+
+파이썬 3 문자열은 바이트 배열이 아닌 유니코드 문자열이다.
+
+파이썬 3의 유니코드 문자열은 파이썬 2로부터의 가장 큰 변화
+
+파이썬 3은 일반적인 바이트 문자열과 유니코드 문자를 구별한다.
+
+### UTF-8 인코딩과 디코딩
+
+외부 데이터를 교환할 때는 다음 과정이 필요
+
+- 문자열을 바이트로 **인코딩**
+- 바이트를 문자열로 **디코딩**
+
+**UTF-8** 동적 인코딩 형식
+
+- 1 바이트: 아스키코드
+- 2 바이트: 키릴 문자르 제외한 대부분의 파생된  라틴어
+- 3 바이트: 기본 다국어 평면의 나머지
+- 4 바이트: 아시아 언어 및 기호를 포함한 나머지
+
+UTF-8은 파이썬, 리눅스, HTML의 표준 텍스트 인코딩
+
+UTF-8은 빠르고 완전하고 잘 동작한다.
+
+**인코딩**
+
+	snowman = '\u2603'
+	
+	snowman은 한 문자의 파이썬 유니코드 문자열
+	
+	len(snowman)
+	1
+
+유니코드 문자를 바이트 시퀀스로 인코딩
+
+ds = snowman.encode('utf-8')
+
+	UTF-8 은 가변 길이 인코딩
+	이 경우 snowman 유니코드 문자를 인코딩하기 위해 3바이트를 사용
+	len(ds)
+	3
+	
+	ds는 바이트 변수기 때문에 len() 은 숫자 3을 반환
+	ds
+	b'\xe2\x98\x83'
+
+UTF-8 이외의 다른 인코딩도 사용할 수 있다.
+
+하지만 유니코드 문자열을 인코딩할 수 없다면 에러를 얻게 된다.
+
+	ds = snowman.encode('ascii')
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	UnicodeEncodeError: 'ascii' codec can't encode character '\u2603' in position 0: ordinal not in range(128)
+
+`encode()` 함수는 인코딩 예외를 피하기 위해 두 번째 인자를 취한다.
+
+위의 예제에서는 두 번째 인자를 지정하지 않았기 때문에 기본값인 `'strict'` 이 지정되었다. 
+
+- 이는 아스키코드가 아닌 문자가 나타났을 때 `UnicodeEncodeError` 를 발생시킴
+
+	'ignore' 는 알 수 없는 문자를 인코딩 하지 않음
+	snowman.encode('ascii', 'ignore')
+	b''
+	
+	'replace' 는 알 수 없는 문자를 "?" 로 대체
+	snowman.encode('ascii', 'replace')
+	b'?'
+	
+	'backslashreplace' 는 유니코드 이스케이프 처럼 파이썬 유니코드 문자의 문자열을 만듦
+	snowman.encode('ascii', 'backslashreplace')
+	b'\\u2603'
+	
+	'xmlcharrefreplace' 는 유니코드 이스케이프 시퀀스를 출력할 수 있는 문자열을 만듦
+	snowman.encode('ascii', 'xmlcharrefreplace')
+	b'&#9731;'
+
 
