@@ -2040,4 +2040,158 @@ UTF-8 이외의 다른 인코딩도 사용할 수 있다.
 	snowman.encode('ascii', 'xmlcharrefreplace')
 	b'&#9731;'
 
+**디코딩**
+
+바이트 문자열을 유니코드 문자열로 **디코딩**
+
+외부 소스(파일, 데이터베이스, 웹사이트, 네트워크 API등) 에서 텍스트를 어들 때마다 그것은 바이트 문자열로 인코딩 되어있다.
+
+- 이 소스에서 실제로 사용된 인코딩을 알기 위해, 인코딩 과정을 거꾸로 하여 유니코드 문자열을 얻을 수 있다.
+- 문제는 바이트 문자열이 어떻게 인코딩되었는지 말해주지 않음
+
+이 예제는 웹사이트의 문자를 아스키 문자로 예상했는데, 이상한 다른 문자로 되어 있는 경우
+
+	place = 'caf\u00e9'
+	place
+	'café'
+	type(place)
+	<class 'str'>
+	
+	UTF-8 형식의 place_bytes라는 바이트 변수로 인코딩
+	place_bytes = place.encode('utf-8')
+	place_bytes
+	b'caf\xc3\xa9'
+	type(place_bytes)
+	<class 'bytes'>
+	
+	place_bytes 는 5바이트로 되어있다.
+	첫 3바이트는 UTF-8과 똑같이 표현되는 아스키 문자다.
+	그리고 마지막 2바이트에서 e 를 인코팅했다.
+	
+	place2 = place_bytes.decode('utf-8')
+	place2
+	'café'
+	
+	아스키 디코더는 0xc3 바이트 값이 아스키코드에 유효하지 않기 때문에 예외가 발생한다.
+	place3 = place_bytes.decode('ascii')
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 3: ordinal not in range(128)
+
+### 포맷
+
+**옛 스타일: %**
+
+- 문자열 포매팅의 옜 스타일은 `string % data` 형식
+- 문자열 안에 끼워넣을 데이터를 표시하는 형식은 보간 시퀀스다
+
+문자열 내의 `%s` 는 다른 문자열을 끼워 넣는 것을 의미
+
+문자열 안의 `%` 수는 뒤 `%` 뒤의 데이터 항목의 수와 일치해야한다.
+
+여러 데이터 항목은 (cat,weight) 와 같이 **튜플**로 **묶어**야 한다.
+
+	actor = 'hyewon'
+	cat = 'Chester'
+	weight = 28
+	"My wife's favorite actor is %s" % actor
+	"My wife's favorite actor is hyewon"
+	"Our cat %s weight %s pounds" % (cat, weight)
+	'Our cat Chester weight 28 pounds'
+
+### 새로운 스타일의 포매팅: {}와 format
+
+	'{} {} {}' .format(actor, cat, weight)
+	'hyewon Chester 28'
+
+옛 스타일의 인자는 문자열에서 `%`가 나타난 순서대로 데이터를 제공하지만
+
+새로운 스타일에서는 아래와 같이 순서를 지정할 수 있다.
+
+	'{2} {0} {1}'.format(cat, actor, weight)
+	'28 Chester hyewon'
+
+### 정규 표현식
+
+정규표현식은 임포트 할 수 있는 표준 모듈 `re`로 제공
+
+문자열 **패턴**을 정의하여 소스 문자열과 일치하는지 비교
+
+	'You' 는 패턴이고 'Young Frankenstein'은 확인하고자 하는 문자열 소스 
+	match() 는 소스와 패턴의 일치 여부를 확인
+	
+	result = re.match('You', 'Young Frankenstein')
+	
+	나중에 패턴 확인을 빠르게 하기 위해 패턴을 먼저 컴파일 할 수 있다.
+	youpattern = re.compile('You')
+	
+	컴파일 된 패턴으로 패턴의 일치 여부를 확인할 수 있다.
+	result = youpattern.match('Young Frankenstein')
+
+- `match()`  는 시작부터 일치하는 객체 반환
+- `search()` 는 첫 번째 일치하는 객체를 반환
+- `findall()` 은 중첩에 상관없이 모두 일치하는 문자열 리스트를 반환
+- `split()`은 **패턴**에 맞게 **소스**를 쪼갠 후 문자열 조각의 리스트를 반환
+- `sub()` 는 **대체 인자**를 하나 더 받아서, 패턴과 일치하는 모든 **소스** 부분을 **대체 인자**로 변경
+
+- `.` 은 한 문자를 의미
+- `*` 는 이전 패턴이 여러개 올 수 있다는 것을 의미, `*` 는 0회 이상의 문자가 올 수 있다는 것을 의미
+
+### 패턴: 특수문자
+
+- 리터럴은 모든 비특수 문자와 일치
+- `\n` 을 제외한 하나의 문자
+- 0회 이상: `*`
+- 0 또는 1회: `?`
+
+### 패턴: 지정자
+
+문자 `^` 와 `$` 는 **앵커**라 부른다.
+
+`^` 는 검색 문자열의 시작위치에,`$` 는 검색 문자열의 마지막 위치에 고정 
+
+`$` 는 가장 마지막에 있는 한 문자와 `.` 을 매칭
+
+더 정확하게 하려면 문자 그대로 매칭하기 위해 `.` 에 이스케이프 문자를 붙여야 한다.
+
+파이썬 문자열에서는 `\b` 는 백스페이스를 의미하지만,
+
+정규식 표현식에서는 단어의 시작 부분을 의미
+
+정규표현식의 패턴을 입력하기 전에 항상 문자  `r` (raw string)을 입력하라.
+
+그러면 파이썬의 이스케이프 문자를 사용할 수 없게 되어 실수로 이스케이프 문자를 사용하여 충돌이 일어나는 것을 피할 수 있다.
+
+	source = '''I wish I may, Iwish Imight Have a dish of fish tonight.'''
+	re.findall(r'\bfish', source)
+	['fish']
+
+### 패턴: 매칭 결과 지정하기
+
+`math()` 또는 `search()` 를 사용할 때 모든 매칭은 `m.group()` 과 같이 객체 m 으로부터 결과를 반환한다.
+
+만약 패턴을 괄호로 둘러싸는 경우, 매칭은 그 괄호만의 그룹으로 저장된다.
+
+`m.groups()` 를 사용하여 그룹의 튜플을 출력
+
+	m = re.search(r'(. dish\b).*(\bfish)', source)
+	m.group()
+	'a dish of fish'
+	m.groups()
+	('a dish', 'fish')
+
+만약 (?< *name* > *expr*) 패턴을 사용한다면, 표현식(*expr*)이 매칭되고, 
+
+그룹 이름(*name*)  의 매칭 내용이 저장된다.
+
+	m = re.search(r'(?P<DISH>. dish\b).*(?P<FISH>\bfish)', source)
+	m.group()
+	'a dish of fish'
+	m.groups()
+	('a dish', 'fish')
+	m.group('DISH')
+	'a dish'
+	m.group('FISH')
+	'fish'
+
 
