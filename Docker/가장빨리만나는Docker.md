@@ -374,6 +374,7 @@ web 컨테이너를 생성하면서 db 컨테이너와 연결
 	docker run --name web -d -p 80:80 --link db:db nginx
 
 docker run 명령에서 연결 옵션은 `--link <컨테이너 이름>:<별칭>`
+
 	docker ps -a
 	CONTAINER ID        IMAGE                                               COMMAND                   CREATED             STATUS                     PORTS                         NAMES
 	7a1b5ef0d5fe        nginx                                               "nginx -g 'daemon of…"    3 minutes ago       Created                                                  web
@@ -533,4 +534,91 @@ Redis 클라이언트가 실행되면 `ping`  명령을 입력
 	redis 172.17.0.4:6379> ping ...왜 ping이 안쳐지는가..
 	PONG
 	redis 172.17.0.4:6379>
+
+### Dcoker 데이터 볼륨 사용하기
+
+Docker 데이터 볼륨은 데이터를 컨테이너가 아닌 호스트에 저장하는 방식
+
+데이터 볼륨은 컨테이너끼리 데이터를 공유할 때 활용할 수 있다.
+
+Docker 컨테이너 안의 파일 변경 사항은 Unifon File System에 의해 관리된다.
+
+하지만 데이터 볼륨은 Union file System을 통하지 않고 바로 호스트에 저장
+
+`docker commit` 명령을 통해 이미지로 생성해도 데이터 볼륨의 변경 사항은 이미지에 포함되지 않는다.
+
+다음 명령을 입력하면 컨테이너 안의 `/data` 디렉터리가 데이터 볼륨으로 설정된다.
+
+컨테이너의 Bash 셸이 실행되면 `/data` 디렉터리로 이동한 뒤 hello 라는 빈 파일을 생성
+
+	sudo docker run -i -t --name test-volume -v /data ubuntu /bin/bash
+	
+	root@e86ea97c03cc:/# cd /data/
+	root@e86ea97c03cc:/data# touch hello
+	root@e86ea97c03cc:/data# ls
+	hello
+	root@e86ea97c03cc:/data# exit
+	exit
+
+데이터 볼륨 옵션은  `-v <컨테이너 디렉터리>` 형식
+
+`docker inspect` 명령으로 **test-volume** 컨테이너의 데이터 볼륨 경로를 확인
+
+	sudo docker inspect -f "{{ .Volumes }}" test-volume
+
+다음 명령을 실행하여 컨테이너를 생성하고 데이터 볼륨을 설정
+
+컨테이너의 Bash 셸이 실행되면 `/data` 디렉터리로 이동한 뒤 world 라는 빈 파일을 생성
+
+	sudo docker run -i -t --name hello-volume1 -v /Users/:/data ubuntu /bin/bash
+	root@d3684bfe5c9a:/data# touch world
+	touch: cannot touch 'world': Permission denied
+
+데이터 볼륨 옵션은 `-v <호스트 디렉터리>:<컨테이너 디렉터리>` 형식
+
+여기서의 호스트의 `/root/data` 디렉터리를 Docker  컨테이너의 `/data` 디렉터리에 연결
+
+	두 번째 컨테이너 생성
+	sudo docker run -i -t --name hello-volume2 -v /Users:/data ubuntu /bin/bash
+	root@af5a7bdb3e5a:/# ls /data
+	world
+
+앞에서 생성한 world  파일이 hello-volume2 파일에서도 보인다.
+
+`/data` 디렉터리에 파일을 생성하면 호스트 및 hello-volume1  컨테이너에서도 사용할 수 있다.
+
+이렇게 데이터 볼륨 설정을 통해 컨테이너끼리 데이터를 공유할 수 있다.
+
+	sudo docker run -i -t --name test-volume -v /root/hello.txt:/root/hello.txt \
+    ubuntu /bin/bash
+
+### Docker 데이터 볼륨 컨테이너 사용하기
+
+데이터 볼륨 컨테이너는 데이터 볼륨을 설정한 컨테이너를 뜻함
+
+일반 컨테이너에서 데이터 볼륨 컨테이너를 연결하면 데이터 볼륨 컨테이너 안의 데이터 볼륨 디렉터리에 접근할 수 있다.
+
+	sudo docker run -i -t --name hello-volume -v /Users/root/data:/data ubuntu /bin/bash
+	oot@36ea0db2408b:/data# touch hello2
+	touch: cannot touch 'hello2': Permission denied
+
+일반 컨테이너를 생성하면서 방금 생성한 hello-volume 데이터 볼륨 컨테이너를 연결
+
+컨테이너의 Bash 셸이 실행되면 `/data` 디렉터리의 파일 목록을 출력
+
+	sudo docker run -i -t --volumes-from hello-volume --name hello ubuntu /bin/bash
+	root@f162e814ebb2:/# ls /data
+
+데이터 볼륨 컨테이너를 연결하는 옵션은 `--volumes-from <데이터 볼륨 컨테이너>` 형식
+
+이제 데이터 볼륨 컨테이너에서 생성한 hello2 파일이 보임(호스트의 `/Users/root/data` 에 연결했기 때문에 앞에서 생성한 다른 파일들이 보일 수 있다.
+
+데이터 볼륨 컨테이너에 일반 컨테이너를 여러 개 연결해도 된다.
+
+다음 명령처럼 `/data` 디렉터리를 호스트의 특정 디렉터리에 연결하지 않아도 데이터 볼륨 컨테이너로 사용할 수 있다.
+
+	sudo docker run -i -t --volumes-from test-volume --name hello ubuntu /bin/bash
+	root@6a553c31076c:/#
+
+
 
