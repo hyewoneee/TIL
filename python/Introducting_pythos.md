@@ -7,7 +7,7 @@
 - [x] 3장. 파이 채우기: 리스트, 튜플, 딕셔너리, 셋
 - [x] 4장. 파이 크러스트: 코드 구조
 - [x] 5장. 파이 포장하기: 모듈, 패키지, 프로그램
-- [ ] 6장. 객체와클래스
+- [x] 6장. 객체와클래스
 - [ ] 7장. 데이터 주무르기
 - [ ] 8장. 흘러가는 데이터
 - [ ] 9장. 웹
@@ -1493,5 +1493,705 @@ EmailPerson 객체를 만들어 보자.
 - 일반 Person 객체와 마찬가지로 Person 클래스를 활용하기 위해 `super()`를 사용했다(?)
 - `super()` 메서드 사용에 대한 다른 이점이 있다.
 - 만약 Person 클래스의 정의가 나중에 바꾸면 Person 클래스로부터 상속받은 EmailPerson 클래스의 속성과 메서드에 변경사항이 반영된다.
+
+### 자신: self
+
+파이선은 적절한 객체의 속성과 메서드를 찾기 위해 `self` 인자를 사용
+
+	car = Car()
+	car.exclaim()
+	I'm a Car!
+
+- car 객체의 Car 클래스를 찾는다.
+- car 객체를 Car 클래스의 exclaim() 메서드의 self 매개 변수에 전달
+
+### get/set 속성값과 프로퍼티
+
+객체 지향 언어에서는 외부로부터 바로 접근할 수 없는 `private` 객체 속성을 지원
+
+프로그래머는 `private` 속성의 값을 읽고 쓰기 위해 `getter` 메서드와 setter 메서드를 사용
+
+파이썬에서는 `getter` 나 `setter` 메서드가 필요 없다.
+
+왜냐하면 모든 속성과 메서드는 `public`이기 때문이다.
+
+만약 속성에 직접 접근하는 것이 부담스럽다면 `getter` 와 `setter` 메서드를 작성할 수 있다.
+
+그러나 파이써닉하게 `프로퍼티(property)`를 사용하자!
+
+hidden_name이라는 속성으로 Duck 클래스를 적용해보는 예제
+
+이 속성을 외부에서 직접 접근하지 못하도록 `getter(get_name())`와 `setter(set_name())` 메서드를 정의
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.hidden_name = input_name
+		def get_name(self):
+		        print('inside the getter')
+	        	return self.hidden_name
+	    def set_name(self, input_name):
+	        print('inside the setter')
+	        self.hidden_name = input_name
+
+	property()의 첫 번째 인자는 getter 메서드, 두 번째 인자는 setter 메서드
+	name = property(get_name, set_name)
+
+Duck 객체의 name을 참조할 때 get_name() 메서드를 호출해서 hidden_name 값을 반환
+
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	
+	보통의 getter 메서드처럼 get_name() 메서드를 직접 호출 가능
+	
+	fowl.get_name()
+	inside the getter
+	'Howard'
+	
+	name 속성에 값을 할당하면 set_name() 메서드를 호출
+	
+	fowl.name = 'Daffy'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Daffy'
+	
+	set_name() 메서드를 여전히 직접 호출할 수 있다.
+	
+	fowl.set_name('Daffy')
+	inside the setter
+	fowl.name
+	inside the getter
+	'Daffy'
+
+프로퍼티를 정의하는 또 다른 방법은 **데커레이터** 사용
+
+- `getter` 메서드 앞에 `@property` 데커레이터 사용
+- `setter` 메서드 앞에 `@name.setter` 데커레이터 사용
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.hidden_name = input_name
+	    @property
+	    def name(self):
+	        print('inside the getter')
+	        return self.hidden_name
+	    @name.setter
+	    def name(self, input_name):
+	        print('inside the setter')
+	        self.hidden_name = input_name
+	
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	fowl.name = 'Donald'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Donald'
+
+프로퍼티 또 한 **계산된 값** 참조 가능
+
+	class Circle():
+	    def __init__(self, radius):
+	        self.radius = radius
+	    @property
+	    def diameter(self):
+	        return 2 * self.radius
+	    
+	radisu 속성의 초깃값으로 Circle 객체를 만듦
+	c = Circle(5)
+	c.radius
+	5
+	
+	radius와 같은 속성처럼 diameter를 참조 가능
+	c.diameter
+	10
+	
+	속성에 대한 settr 프로퍼티를 명시하지 않는다면 외부로부터 이 속성을 설정할 수 없다.
+	이것은 읽기 전용이다.
+	c.diameter = 20
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: can't set attribute
+
+직접 속성을 접근하는 것보다 프로퍼티를 통해서 접근하면 큰 이점이 있다.
+
+예를 들어 만약 속성의 정의를 바꾸려면 모든 호출자를 수정할 필요 없이 클래스 정의에 있는 코드만 수정하면 된다.
+
+### private 네임 맹글링
+
+파이썬은 클래스 정의 외부에서 볼 수 없도록 하는 속성에 대한 네이밍 컨벤션(namaing convention)이 있다.
+
+위의 예제를 수정해 본다.
+
+	class Duck():
+	    def __init__(self, input_name):
+	        self.__name = input_name
+	    @property
+	    def name(self):
+	        print('inside the getter')
+	        return self.__name
+	    @name.setter
+	    def name(self, input_name):
+	        print('inside the setter')
+	        self.__name = input_name
+	
+	fowl = Duck('Howard')
+	fowl.name
+	inside the getter
+	'Howard'
+	fowl.name = 'Donald'
+	inside the setter
+	fowl.name
+	inside the getter
+	'Donald'
+
+`__name` 속성을 바로 접근 할 수 없다.
+
+	fowl.__name
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: 'Duck' object has no attribute '__name'
+
+네이밍 컨벤션은 속성을 private로 만들지 않지만, 파이썬은 이 속성이 우연히 외부 코드에서 발견할 수 없도록 이름을 **맹글링(mangling)** 했다.
+
+
+	fowl._Duck__name
+	'Donald'
+
+inside the getter를 출력하지 않았다.
+
+이것이 속성을 완벽하게 보호할 수는 없지만, 네임 맹글링은 속성의 의도적인 직접 접근을 어렵게 만든다.
+
+### 메서드 타입
+
+어떤 데이터(**속성**)와 함수(**메서드**)는 클래스 자신의 일부이고, 
+
+어떤 것은 클래스로부터 생성된 객체의 일부다.
+
+**인스턴스 메서드**
+
+- 클래스 정의에서 메서드의 첫 번째 인자가 `self`라면 이 메서드는 **인스턴스 메서드** 다.
+- 일반적은 클래스를 생성할 때의 메서드 타입니다.
+
+인스턴스 메서드의 첫 번째 매개변수는 `self` 고, 파이썬은 이 메서드를 호출할 때 객체를 전달한다.
+
+**클래스 메서드**
+
+- **클래스 메서드**는 클래스 전체에 영향을 미친다.
+- 클래스 정의에서 함수에 **@classmethod** 데커레이터 사용
+- 첫 번째 매개변수는 클래스 자신이다.
+- 파이썬에서는 보통 이 클래스의 매개변수를 `cls` 로 쓴다.
+- class는 에약어기 때문에 사용할 수 없다.
+
+	class A():
+	    count = 0
+	    def __init__(self):
+	        A.count += 1
+	    def exclaim(self):
+	        print("I'm an A!")
+	    @classmethod
+	    def kids(cls):
+	        print("A has", cls.count, "little objects")
+	        
+	easy_a = A()
+	breezy_a = A()
+	wheezy_a = A()
+	A.kids()
+	A has 3 little objects
+
+`self.count(객체 인스턴스 속성)` 를 참조하기보다 **A.coutn(클래스속성)**를 참조했다.
+
+kids() 메서드에서 `A.count`를 사용할 수  있었지만 `cls.count`를 사용했다.
+
+**정적 메서드**
+
+클래스 정의에서 메서드의 세 번째 타입은 클래스나 객체에 영향을 미치지 못한다.
+
+이 메서드는 단지 편의를 위해 존재
+
+**정적 메서드**는 `@staticmethod`  데커레이터가 붙어 있다.
+
+첫 번째 매개변수로 `self`나 `cls`가 **없다**.
+
+	class CoyoteWeapon():
+	    @staticmethod
+	    def commercial():
+	        print('This CoyoteWeapon has been brought to you by Acme')
+	        
+	CoyoteWeapon.commercial()
+	This CoyoteWeapon has been brought to you by Acme
+
+이 메서드를 접근하기 위해 CoyoteWeapon 클래스에서 **객체를 생성할 필요가 없다**.
+
+**매우 클래시(class-y)하다**
+
+### 덕 타이핑
+
+파이썬은 **다형성(polymorphism)**을 느슨하게 구현했다.
+
+이것은 클래스에 상관없이 같은 동작을 다른 객체에 적용할 수 있다는 것
+
+세 Qoute 클래스에서 같은 `__init__()` 이니셜라이저를 사용
+
+클래스에 다음 두 메서드를 추가
+
+- `who()` 메서드는 저장된 person 문자열의 값을 반환
+- `says()` 메서드는 특정 구두점과 함께 저장된 words 문자열을 반환
+
+	class Quote():
+	    def __init__(self, person, words):
+	        self.person = person
+	        self.words = words
+	    def who(self):
+	        return self.person
+	    def says(self):
+	        return self.words + '.'
+	    
+	class QuestionQuote(Quote):
+	    def says(self):
+	        return self.words + '?'
+	    
+	class ExclamationQuote(Quote):
+	    def says(self):
+	        return self.words + '!'
+
+QuestionQuote와 ExclamationQuote 클래스에서 초기화 함수를 쓰지 않아,
+
+부모의 `__init__()` 메서드를 호출해서 **인스턴스 변수** `person`과 `words`를 저장한다.
+
+그러므로 **서브클래스** QuestonQuote와 ExclamationQuote에서 생성된 객체의 `self.words`에 접근할 수 있다.
+
+	hunter = Quote('Elmer Fudd', "I'm hunting wabbits")
+	print(hunter.who(), 'says:', hunter.says())
+	Elmer Fudd says: I'm hunting wabbits.
+	
+	hunter1 = QuestionQuote('Bugs Bunny', "What's up, doc")
+	print(hunter1.who(), 'says:', hunter1.says())
+	Bugs Bunny says: What's up, doc?
+	
+	hunted2 = ExclamationQuote('Daffy Duck', "It's rabbit season")
+	print(hunted2.who(), 'says:', hunted2.says())
+	Daffy Duck says: It's rabbit season!
+
+세 개의 서로 다른 `says()` 메서드는 세 클래스에 대해 서로 다른 동작을 제공
+
+이것은 객체 지향 언어에서 전통적인 다형성의 특징 
+
+파이썬은 `who()`와 `says()` 메서드를 갖고 있는 **모든** 객체에서 이 메서드들을 실행할 수 있게 해준다.
+
+	class BabblingBrook():
+	    def who(self):
+	        return 'Brook'
+	    def says(self):
+	        return 'Babble'
+	    
+	brook = BabblingBrook()
+	def who_says(obj):
+	    print(obj.who(), 'says', obj.says())
+
+다양한 객체의 `who()` 와 `says()` 메서드를 실행해보면 brook 객체는 다른 객체와 전혀 관계가 없는 것을 알 수 있다.
+
+	who_says(hunter)
+	Elmer Fudd says I'm hunting wabbits.
+	
+	who_says(hunter1)
+	Bugs Bunny says What's up, doc?
+	
+	who_says(hunted2)
+	Daffy Duck says It's rabbit season!
+
+예전부터 이러한 행위를 **덕 타이핑(duck typing)**이라고 불렀다.
+
+- 오리처럼 꽥꽥거리고 걷는다면, 그것은 오리다.
+
+### 특수 메서드
+
+파이썬의 **특수 메서드**를 사용하여 연산자를 사용할 수 있다.
+
+문자열을 비교하는 예제이다.
+
+	class Word():
+	    def __init__(self, text):
+	        self.text = text
+	    def equals(self, word2):
+	        return self.text.lower() == word2.text.lower()
+	    	
+	first = Word('ha')
+	second = Word('Ha')
+	third = Word('eh')
+	
+	first.equals(second)
+	True
+	first.equals(third)
+	False
+
+`equal()` 메서드를 특수 이름의 `__eq__()` 메서드로 바꿔보자
+
+	class Word():
+	    def __init__(self, text):
+	        self.text = text
+	    def __eq__(self, word2):
+	        return self.text.lower() == word2.text.lower()
+	    
+	first = Word('ha')
+	second = Word('HA')
+	third = Word('eh')
+	
+	first == second
+	True
+	first == third
+	False
+
+
+특수 메서드에 대해 좀 더 알고 싶다면 파이썬 문서를 참고
+
+### 컴포지션
+
+상속은 자식 클래스가 부모 클래스처럼 행동하고 싶을때 사용하는 좋은 기술이다(자식 is-a 부모).
+
+상속을 사용할 수 있지만, **컴포지션(composition)** 또는 **어그리게이션(aggregation)**의 사용이 더 적절한 경우가 있다**(X has-a Y)**.
+
+- 오리는 조류이지만 (오리 is-a 조류), 꼬리를 갖고 있다(오리 has-a 꼬리).
+- 꼬리는 오리에 속하지 않지만 오리의 일부
+
+	class Bill():
+	    def __init__(self, description):
+	        self.description = description
+	        
+	class Tail():
+	    def __init__(self, length):
+	        self.length = length
+	        
+	class Duck():
+	    def __init__(self, bill, tail):
+	        self.bill = bill
+	        self.tail = tail
+	    def about(self):
+	        print('This duck has a', self.bill.description, 'bill and a', self.tail.length, 'tail')
+	        
+	tail = Tail('long')
+	bill = Bill('wide orange')
+	duck = Duck(bill, tail)
+	
+	duck.about()
+	This duck has a wide orange bill and a long tail
+
+이 오리는 넓은 오랜지색 부리와 긴 꼬리를 가지고 있다.
+
+### 클래스와 객체, 그리고 모듈은 언제 사용할까?
+
+- 비슷한 행동(메서드)을 하지만 내부 상태(속성)가 다른 개별 인스턴스가 필요할때, 객체는 매우 유용
+- 클래스는 상속을 지원, 모듈은 상속을 지원하지 않는다.
+- 어떤 한 가지 일만 수행한다면 모듈이 가장 좋은 선택
+    - 프로그램에서 파이썬 모듈이 참조된 횟수에 상관없이 단 하나의 복사본만 불러온다.
+
+- 여러 함수에 인자로 전달될 수 있는 여러 값을 포함한 변수가 있다면, 클래스를 정의
+- 간단한 문제 해결방법을 사용
+    - 딕셔너리, 리스트, 튜플은 모듈보다 더 작고, 간단하며, 빠르다
+    - 일반적으로 모듈은 클래스보다 더 간단하다.
+
+귀도의 조언
+
+	자료구조를 과하게 엔지니어링 하는 것을 피하라.
+ 	객체보다 튜플이 낫다(네임드 튜플을 써봐라).
+ 	
+ 	getter/setter 함수보다 간단한 필드가 더 낫다.
+	내장된 데이터 타입, 숫자, 문자열, 튜플, 리스트, 셋, 딕셔너리를 사용하라.
+	또한 데크와 같은 컬렉션 라이브러리를 활용하라.
+
+### 네임드 튜플
+
+네임드 튜플은 튜플의 서브클래스이다.
+
+이름(.name), 위치([offset]) 로 값에 접근할 수 있다.
+
+Duck 클래스를 **네임드 튜플**로, bill 과 tail 을 간단한 문자열 속성으로 변환 
+
+두 인자를 취하는 `namedtuple` 함수를 호출
+
+- 이름
+- 스페이스로 구분된 필드 이름의 문자열
+
+	from collections import namedtuple
+	Duck = namedtuple('Duck', 'bill tail')
+	duck = Duck('wide orange', 'long')
+	duck
+	Duck(bill='wide orange', tail='long')
+	duck.bill
+	'wide orange'
+	duck.tail
+	'long'
+
+딕셔너리에 네임드 튜플을 만들 수 있다
+
+	parts = {'bill': 'wide orange', 'tail':'long'}
+	duck2 = Duck(**parts)
+	duck2
+	Duck(bill='wide orange', tail='long')
+
+`**parts` 는 키워드 인자다.
+
+`parts` 딕셔너리에 키와 값을 추출하여 `Duck()` 의 인자로 제공
+
+다음 예제와 효과가 같다.
+
+	duck2 = Duck(bill='wide orange', tail='long')
+
+네임드 튜플은 불변한다. 하지만 필드를 바꿔서 또 다른 네임드 튜플을 반환 할 수 있다.
+
+딕셔너리는 네임드 튜플이 아니다.
+
+	duck.color = 'green'
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	AttributeError: 'Duck' object has no attribute 'color'
+
+**네임드 튜플의 특징**
+
+- 불변하는 객체처럼 행동한다.
+- 객체보다 공간 효율성과 시간 효율성이 더 좋다.
+- 딕셔너리 형식의 괄호([]) 대신, 점(.) 표기법으로 속성을 접근할 수 있다.
+- 네임드 튜플을 딕셔너리의 키 처럼 쓸 수 있다.
+
+---
+
+# 7장. 데이터 주무르기
+
+### 파이썬3 유니코드 문자열
+
+파이썬 3 문자열은 바이트 배열이 아닌 유니코드 문자열이다.
+
+파이썬 3의 유니코드 문자열은 파이썬 2로부터의 가장 큰 변화
+
+파이썬 3은 일반적인 바이트 문자열과 유니코드 문자를 구별한다.
+
+### UTF-8 인코딩과 디코딩
+
+외부 데이터를 교환할 때는 다음 과정이 필요
+
+- 문자열을 바이트로 **인코딩**
+- 바이트를 문자열로 **디코딩**
+
+**UTF-8** 동적 인코딩 형식
+
+- 1 바이트: 아스키코드
+- 2 바이트: 키릴 문자르 제외한 대부분의 파생된  라틴어
+- 3 바이트: 기본 다국어 평면의 나머지
+- 4 바이트: 아시아 언어 및 기호를 포함한 나머지
+
+UTF-8은 파이썬, 리눅스, HTML의 표준 텍스트 인코딩
+
+UTF-8은 빠르고 완전하고 잘 동작한다.
+
+**인코딩**
+
+	snowman = '\u2603'
+	
+	snowman은 한 문자의 파이썬 유니코드 문자열
+	
+	len(snowman)
+	1
+
+유니코드 문자를 바이트 시퀀스로 인코딩
+
+ds = snowman.encode('utf-8')
+
+	UTF-8 은 가변 길이 인코딩
+	이 경우 snowman 유니코드 문자를 인코딩하기 위해 3바이트를 사용
+	len(ds)
+	3
+	
+	ds는 바이트 변수기 때문에 len() 은 숫자 3을 반환
+	ds
+	b'\xe2\x98\x83'
+
+UTF-8 이외의 다른 인코딩도 사용할 수 있다.
+
+하지만 유니코드 문자열을 인코딩할 수 없다면 에러를 얻게 된다.
+
+	ds = snowman.encode('ascii')
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	UnicodeEncodeError: 'ascii' codec can't encode character '\u2603' in position 0: ordinal not in range(128)
+
+`encode()` 함수는 인코딩 예외를 피하기 위해 두 번째 인자를 취한다.
+
+위의 예제에서는 두 번째 인자를 지정하지 않았기 때문에 기본값인 `'strict'` 이 지정되었다. 
+
+- 이는 아스키코드가 아닌 문자가 나타났을 때 `UnicodeEncodeError` 를 발생시킴
+
+	'ignore' 는 알 수 없는 문자를 인코딩 하지 않음
+	snowman.encode('ascii', 'ignore')
+	b''
+	
+	'replace' 는 알 수 없는 문자를 "?" 로 대체
+	snowman.encode('ascii', 'replace')
+	b'?'
+	
+	'backslashreplace' 는 유니코드 이스케이프 처럼 파이썬 유니코드 문자의 문자열을 만듦
+	snowman.encode('ascii', 'backslashreplace')
+	b'\\u2603'
+	
+	'xmlcharrefreplace' 는 유니코드 이스케이프 시퀀스를 출력할 수 있는 문자열을 만듦
+	snowman.encode('ascii', 'xmlcharrefreplace')
+	b'&#9731;'
+
+**디코딩**
+
+바이트 문자열을 유니코드 문자열로 **디코딩**
+
+외부 소스(파일, 데이터베이스, 웹사이트, 네트워크 API등) 에서 텍스트를 어들 때마다 그것은 바이트 문자열로 인코딩 되어있다.
+
+- 이 소스에서 실제로 사용된 인코딩을 알기 위해, 인코딩 과정을 거꾸로 하여 유니코드 문자열을 얻을 수 있다.
+- 문제는 바이트 문자열이 어떻게 인코딩되었는지 말해주지 않음
+
+이 예제는 웹사이트의 문자를 아스키 문자로 예상했는데, 이상한 다른 문자로 되어 있는 경우
+
+	place = 'caf\u00e9'
+	place
+	'café'
+	type(place)
+	<class 'str'>
+	
+	UTF-8 형식의 place_bytes라는 바이트 변수로 인코딩
+	place_bytes = place.encode('utf-8')
+	place_bytes
+	b'caf\xc3\xa9'
+	type(place_bytes)
+	<class 'bytes'>
+	
+	place_bytes 는 5바이트로 되어있다.
+	첫 3바이트는 UTF-8과 똑같이 표현되는 아스키 문자다.
+	그리고 마지막 2바이트에서 e 를 인코팅했다.
+	
+	place2 = place_bytes.decode('utf-8')
+	place2
+	'café'
+	
+	아스키 디코더는 0xc3 바이트 값이 아스키코드에 유효하지 않기 때문에 예외가 발생한다.
+	place3 = place_bytes.decode('ascii')
+	Traceback (most recent call last):
+	  File "<input>", line 1, in <module>
+	UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 3: ordinal not in range(128)
+
+### 포맷
+
+**옛 스타일: %**
+
+- 문자열 포매팅의 옜 스타일은 `string % data` 형식
+- 문자열 안에 끼워넣을 데이터를 표시하는 형식은 보간 시퀀스다
+
+문자열 내의 `%s` 는 다른 문자열을 끼워 넣는 것을 의미
+
+문자열 안의 `%` 수는 뒤 `%` 뒤의 데이터 항목의 수와 일치해야한다.
+
+여러 데이터 항목은 (cat,weight) 와 같이 **튜플**로 **묶어**야 한다.
+
+	actor = 'hyewon'
+	cat = 'Chester'
+	weight = 28
+	"My wife's favorite actor is %s" % actor
+	"My wife's favorite actor is hyewon"
+	"Our cat %s weight %s pounds" % (cat, weight)
+	'Our cat Chester weight 28 pounds'
+
+### 새로운 스타일의 포매팅: {}와 format
+
+	'{} {} {}' .format(actor, cat, weight)
+	'hyewon Chester 28'
+
+옛 스타일의 인자는 문자열에서 `%`가 나타난 순서대로 데이터를 제공하지만
+
+새로운 스타일에서는 아래와 같이 순서를 지정할 수 있다.
+
+	'{2} {0} {1}'.format(cat, actor, weight)
+	'28 Chester hyewon'
+
+### 정규 표현식
+
+정규표현식은 임포트 할 수 있는 표준 모듈 `re`로 제공
+
+문자열 **패턴**을 정의하여 소스 문자열과 일치하는지 비교
+
+	'You' 는 패턴이고 'Young Frankenstein'은 확인하고자 하는 문자열 소스 
+	match() 는 소스와 패턴의 일치 여부를 확인
+	
+	result = re.match('You', 'Young Frankenstein')
+	
+	나중에 패턴 확인을 빠르게 하기 위해 패턴을 먼저 컴파일 할 수 있다.
+	youpattern = re.compile('You')
+	
+	컴파일 된 패턴으로 패턴의 일치 여부를 확인할 수 있다.
+	result = youpattern.match('Young Frankenstein')
+
+- `match()`  는 시작부터 일치하는 객체 반환
+- `search()` 는 첫 번째 일치하는 객체를 반환
+- `findall()` 은 중첩에 상관없이 모두 일치하는 문자열 리스트를 반환
+- `split()`은 **패턴**에 맞게 **소스**를 쪼갠 후 문자열 조각의 리스트를 반환
+- `sub()` 는 **대체 인자**를 하나 더 받아서, 패턴과 일치하는 모든 **소스** 부분을 **대체 인자**로 변경
+
+- `.` 은 한 문자를 의미
+- `*` 는 이전 패턴이 여러개 올 수 있다는 것을 의미, `*` 는 0회 이상의 문자가 올 수 있다는 것을 의미
+
+### 패턴: 특수문자
+
+- 리터럴은 모든 비특수 문자와 일치
+- `\n` 을 제외한 하나의 문자
+- 0회 이상: `*`
+- 0 또는 1회: `?`
+
+### 패턴: 지정자
+
+문자 `^` 와 `$` 는 **앵커**라 부른다.
+
+`^` 는 검색 문자열의 시작위치에,`$` 는 검색 문자열의 마지막 위치에 고정 
+
+`$` 는 가장 마지막에 있는 한 문자와 `.` 을 매칭
+
+더 정확하게 하려면 문자 그대로 매칭하기 위해 `.` 에 이스케이프 문자를 붙여야 한다.
+
+파이썬 문자열에서는 `\b` 는 백스페이스를 의미하지만,
+
+정규식 표현식에서는 단어의 시작 부분을 의미
+
+정규표현식의 패턴을 입력하기 전에 항상 문자  `r` (raw string)을 입력하라.
+
+그러면 파이썬의 이스케이프 문자를 사용할 수 없게 되어 실수로 이스케이프 문자를 사용하여 충돌이 일어나는 것을 피할 수 있다.
+
+	source = '''I wish I may, Iwish Imight Have a dish of fish tonight.'''
+	re.findall(r'\bfish', source)
+	['fish']
+
+### 패턴: 매칭 결과 지정하기
+
+`math()` 또는 `search()` 를 사용할 때 모든 매칭은 `m.group()` 과 같이 객체 m 으로부터 결과를 반환한다.
+
+만약 패턴을 괄호로 둘러싸는 경우, 매칭은 그 괄호만의 그룹으로 저장된다.
+
+`m.groups()` 를 사용하여 그룹의 튜플을 출력
+
+	m = re.search(r'(. dish\b).*(\bfish)', source)
+	m.group()
+	'a dish of fish'
+	m.groups()
+	('a dish', 'fish')
+
+만약 (?< *name* > *expr*) 패턴을 사용한다면, 표현식(*expr*)이 매칭되고, 
+
+그룹 이름(*name*)  의 매칭 내용이 저장된다.
+
+	m = re.search(r'(?P<DISH>. dish\b).*(?P<FISH>\bfish)', source)
+	m.group()
+	'a dish of fish'
+	m.groups()
+	('a dish', 'fish')
+	m.group('DISH')
+	'a dish'
+	m.group('FISH')
+	'fish'
 
 
