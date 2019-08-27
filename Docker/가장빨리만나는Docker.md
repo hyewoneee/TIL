@@ -7,7 +7,7 @@ Link : http://pyrasis.com/docker.html
 - [x] 3장. Docker 사용해보기
 - [x] 4장. Docker 이미지 생성하기
 - [x] 5장. Docker 살펴보기
-- [ ] 6장. Docker 좀더 활용하기
+- [x] 6장. Docker 좀더 활용하기
 - [ ] 7장. Docker file 자세히 알아보기
 - [ ] 8장. Docker로 애플리케이션 배포하기
 - [ ] 9장. Docker 모니터링 하기
@@ -621,4 +621,159 @@ Docker 컨테이너 안의 파일 변경 사항은 Unifon File System에 의해 
 	root@6a553c31076c:/#
 
 
+### Docker 베이스 이미지 생성하기
 
+보통 Dockerfile로 이미지를 생성할 때 Docker Hub에서 제공하는 공식 이미지를 기반으로 생성
+
+이번에는 나만의 베이스 이미지를 생성하는 방법을 알아볼 것
+
+**빈 베이스 이미지 생성하기**
+
+아무것도 들어있지 않은 베이스 이미지를 생성하는 방법
+
+Docker에서는 빈 베이스 이미지를 **sratch** 이미지라 부른다.
+
+`/dev/null` 장치를 이용하여 빈 tar 빈 파일을 만들어서 `docekr import` 명령에 전달
+
+	tar cv --files-from /dev/null | sudo docker import - scratch
+
+**scratch** 이미지는 안에 아무것도 없기 때문에 컨테이너로 생성되지 않는다.
+
+여기서 Dockerfile을 작성하여 여러분이 만든 실행 파일을 넣으면 된다.
+
+hello 디렉터리를 생성한 뒤 hello.c를 아래의 코드로 저장
+
+	int main ()
+	{
+	    printf("Hello Docker\n");
+	    return 0;
+	} 
+
+hello.c 파일을 컴파일하여 실행 파일로 만든다.
+
+scratch 이미지에는 아무 라이브러리도 없으므로 반드시 정적(static) 바이너리 컴파일 해야한다.
+
+	gcc hello.c -static -o hello
+
+Dockerfile로 다음 내용을 저장
+
+	FROM scratch
+	ADD ./hello /hello
+	CMD ["/hello"]
+
+scratch 이미지를 기반으로 새로운 이미지를 생성
+
+- FROM: 어떤 이미지를 기반으로 할지 설정. Docker 이미지는 기존에 만들어진 이미지 기반으로 생성 `<이미지 이름>:<태그>` 형식
+- ADDL 이미지에 포함할 파일을 설정 `<로컬 경로><이미지 경로>` 형식
+- CMD: 컨테이너가 시작되었을 때 실행할 실행 파일 또는 스크립트
+
+`docker build` 명령으로 이미지 생성
+
+	sudo docker build --tag hello:0.1 .
+
+scratch 이미지를 이용해서 만든 hello:0.1 이미지를 컨테이너로 생성
+
+	sudo docker run --rm hello:0.1
+
+### Docker 안에서 Docker 실행하기
+
+복잡하게 왜 Docker 컨테이너 안에서 Docker를 실행할까?
+
+예를 들면 Jenkins나 CruiseControl과 같은 빌드 자동화 시스템을 이용해서 Docker 이미지를 생성할 때 활용할 수 있다.
+
+Jenkins, CruiseControl 환경 자체도 Docker 이미지로 만들면 Docker 컨테어니 안에서 Docker를 실행할 수 있어야 한다.
+
+	GitHub에서 Dockerfile과 Bash 스크립트를 받음
+	git clone https://github.com/pyrasis/dind.git
+	
+	dind 디렉터리로 이동한뒤 dockr bulid 명령으로 이미지 생성
+	cd dind
+	sudo docker build --tag dind .
+
+ dind 이미지로 컨테이너 생성
+
+	sudo docker run -i -t --privileged dind
+	root@7cdab901e53e:/#
+
+여기서 `--privileged` 옵션이 중요하다.
+
+- 이 옵션은 컨테이너 안에서 호스트의 리눅스 커널 기능을 모두 사용할 수 있도록 해준다.
+
+Docker in Docker 는 실험적인 기능이기 때문에 로그를 출력하도록 설정되어있다.
+
+로그를 출력하지 않으려면 다음과 같이 `-e LOG=file` 옵션을 사용하면 된다.
+
+	sudo docker run -i -t --privileged -e LOG=file dind
+
+Docker 컨테이너 안에서 Docker 컨테이너 실행
+
+	root@a4d395335e0b:/# sudo docker run -i -t busybox:latest /bin/sh
+	Unable to find image 'busybox:latest' locally
+	latest: Pulling from library/busybox
+	ecf7dd1833d3: Pull complete
+	839136952431: Pull complete
+	Digest: sha256:bb84a4a069de8e6b9f1a39fecb503ce2cb8b8b68c998b997948a5b96e8b0d119
+	Status: Downloaded newer image for busybox:latest
+	/ #
+
+이렇게 호스트 → dind 컨테이너 → busybox 컨테이너 순서로 실행되었다.
+---
+
+# 7장. Docker file 자세히 알아보기
+
+이 장에서는 Dockerfile을 좀 더 자세히 살펴본다.
+
+Dockerfile은 다음과 같이 `<명령> <매게변수>` 형식
+
+#는 주석이다. 명령은 대소문자를 구분하지 않지만 보통 대문자로 작성
+
+	# 주석
+	FROM scratch
+
+Docker는 Dockerfile에 작성된 명령을 순서대로 처리
+
+그리고 Dockerfile에서 명령은 **항상** `FROM`으로 **시작**해야한다.
+
+`FROM` 이 없거나 `FORM` 앞에 다른 명령이 있으면 이미지가 생성되지 않는다. 
+
+또한, 각 명령은 독립적으로 실행된다.
+
+예를 들어 `RUN cd/home/hello` 로 디렉터리를 이동하더라도 뒤에오는 명령에는 영향을 주지 않는다.
+
+이미지를 생성할 때는 Dockerfile이 있는 디렉터리에서 `docker bulid` 명령을 사용
+
+	sudo docker build --tag example .
+	sudo docker build --tag pyrasis/example .
+
+`--tag` 또는 `-t` 옵션으로 이미지 이름을 설정할 수 있다.
+
+Docker Hub에 이미지를 올리려면 **pyrasis/example**처럼 / 앞에 사용자명을 붙이면 된다.
+
+이미지 이름을 설정하지 않아도 이미지는 생성된다. 
+
+이때 이미지를 사용하려면 이미지 ID를 지정하면 된다.
+
+### .dockerignore
+
+Dockerfile과 같은 디렉터리에 들어있는 모든 파일을 컨텍스트(context)라고 한다.
+
+특히 이미지를 생성할 때 컨텍스트를 모두 Docker 데몬에 전송하므로 필요 없는 파일이 포함되지 않도록 주의한다.
+
+컨텍스트에서 파일이나 디렉터리를 제외하고 싶을 때는 **.dockerignore** 파일을 사용하면 된다.
+
+Docker는 Go 언어로 작성되어 있기 때문에 파일매칭도 Go 언어의 규칙을 따른다.
+
+	Dockerfile
+	
+	example/hello.txt
+	example/*.cpp
+	wo*
+	*.cpp
+	.git
+
+특정 파일이나 디렉터리를 제외할 수 있고,  보통 `*` 를 주로 사용한다.
+
+버전 관리 시스템을 이용하여 Dockerfile 과 필요한 파일을 관리할때 `.git`, `.svn` 과 같은 디렉터리는 제외해준다.
+
+
+.svn
