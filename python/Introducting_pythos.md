@@ -2234,3 +2234,148 @@ struct 모듈의 `pack()` 함수로 파이썬 데이터를 바이트로 변환�
 표준 binascii 모듈은 이진 데이터와 다양한 문자열 표현(16진수, 64진수, uuencoded 등)을 서로 변환할 수 있는 함수를 제공
 
 
+# 8장. 흘러가는 데이터
+활성화된 프로그램은 데이터 램(RAM)에 저장한다.
+
+램은 아주 빠르지만, 비싸고, 일정한 전력 공급을 필요로 한다.
+
+전원이 꺼질 경우 메모리에 있는 모든 데이터가 사라진다.
+
+디스크 라이브는 램보다 느리지만 용량이 넉넉하고, 비용이 비싸며, 전원이 꺼지더라고 데이터를 유지한다.
+
+프로그래머는 디스크와 같은 비휘발성 장치를 사용하여 데이터를 저장하고 복구할 수 있는 **지속성**이 필요하다.
+
+### 파일 입출력
+
+파일을 읽고 쓰기 전에, 파일을 열어야한다.
+
+*fileobj* = open(*filname*, *mode*)
+
+- *fileobj*는 `open()` 에 의해 반환되는 파일 객체
+- *filename*은 파일의 문자열 이름
+- *mode*는 파일 타입과 파일로 무엇을 할지 명시하는 문자열
+
+*mode*의 첫 번째 글자는 **작업**을 명시
+
+- r : 파일 읽기
+- w : 파일 쓰기 (파일이 존재하지 않으면 파일을 생성하고, 파일이 존재하면 덮어쓴다)
+- x : 파일 쓰기(파일이 존재하지 **않을** 경우에만 해당)
+- a : 파일 추가하기(파일이 존재하면 파일의 끝에서 부터 쓴다)
+
+*mode*의 두 번째 글자는 파일 타입을 명시
+
+- t(또는 아무것도 명시하지 않음): 텍스트 타입
+- b : 이진(binary)  타입
+
+파일을 열고 다 사용했다면, 파일을 **닫아야** 한다.
+
+### 텍스트 파일 쓰기: write()
+
+    poem = '''There was a youmn lady named Bright, Whose speed was far faster than light; She started one day In a relative way, And returned on the previous night.'''
+    len(poem)
+    150
+
+poem을 relativity 파일에 쓴다.
+
+    fout = open('relativity', 'wt')
+    fout.write(poem)
+    150
+    fout.close()
+
+`write()` 함수는 파일에 쓴 바이트수를 반환.
+
+`write()` 함수는 `print()` 함수처럼 스페이스나 줄바꿈을 추가하지 않는다.
+
+    fout = open('relativity', 'wt')
+    print(poem, file=fout)
+    fout.close()
+
+기본적으로 `print()` 는 각 인자 뒤에 스페이스를, 끝에 줄바꿈을 추가한다.
+
+이전 예제에서는 relativity파일에 줄바꿈이 추가 되었다.
+
+`print()` 를 `write()` 처럼 작동하려면 `print()` 에 다음 두 인자를 전달한다.
+
+- seq(구분자, 기본값은 스페이즈('')다.)
+- end(문자열 끝, 기본값은 줄바꿈('\n')이다.)
+
+    fout = open('relativity', 'wt')
+    print(poem, file=fout, sep='', end='')
+    fout.close()
+
+파일에 쓸 문자열이 크면 특정 단위(chunk)로 나누어서 파일에 쓴다.
+
+    fout = open('relativity', 'wt')
+    size=len(poem)
+    offset =0
+    chunk=100
+    while True:
+        if offset > size:
+            break
+        fout.write(poem[offset:offset+chunk])
+        offset += chunk
+
+### 텍스트 파일 읽기: read(), readline(), readlines()
+
+`read()` 함수를 인자 없이 호출하여 한 번에 전체 파일을 읽을 수 있다.
+
+아주 큰 파일을 이와 같이 읽을 때 메모리가 소비될 수 있으므로 주의
+
+    fin = open('relativity', 'rt')
+    poem=fin.read()
+    fin.close()
+    len(poem)
+    150
+
+한 번에 얼마만큼 읽을 것인지 크기를 제한할 수 있다.
+
+`read()` 함수가 한 번에 읽을 수 있는 문자수를 제한하려면 최대 문자수를인자ㅗㄹ 입력한다.
+
+    한 번에 100문자를 읽은 뒤 각 chunk 문자열을 poem 문자열에 축하ㅏ여 원본 파일의 문자열을 모두 저장
+    poem = ''
+    fin = open('relativity', 'rt')
+    chunk = 100
+    while True:
+        fragment = fin.read(chunk)
+        if not fragment:
+            break
+        poem += fragment
+
+파일을 다 읽어서 끝에 도달하면, `read()` 함수는 빈 분자열('')을 반환한다.
+
+이것은 `if not fragment` 에서 `fragment`가 False가 되고, 
+
+결국 not False는 True가 되어 while True 루프를 탈출
+
+또한 `readline()` 함수를 사용하여 파일을 라인 단위로 읽을 수 있다.
+
+텍스트 파일의 빈 라인의 길이는 `1` 이고 `\n` , 
+
+이것을 True로 인식한다.
+
+파일 읽기의 끝에 도달 했을 때 (`read()` 함수처럼) `readline()` 함수 또한 Flase로 간주하는 빈 문자열을 반환
+
+텍스트 파일을 가장 읽기 쉬운 방법은 **이터레이터**를 사용하는 것
+
+이터레이터는 한 번에 한 라인씩 반환.
+
+    poem = ''
+    fin = open('relativity', 'rt')
+    for line in fin:
+        poem += line
+        
+    fin.close()
+    len(poem)
+    150
+
+### 이진 파일 쓰기 write()  이진 파일 읽기 read()
+
+**모드**에 `'b'` 를 포함 시키면 파일을 이진 모드로 연다.
+
+이 경우 문자열 대신 바이트를 일고 쓸 수 있다.
+
+    fout = open('file', 'wb')
+    
+    fin = open('bfile', 'rb')
+
+
