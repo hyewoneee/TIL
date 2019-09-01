@@ -776,4 +776,181 @@ Docker는 Go 언어로 작성되어 있기 때문에 파일매칭도 Go 언어�
 버전 관리 시스템을 이용하여 Dockerfile 과 필요한 파일을 관리할때 `.git`, `.svn` 과 같은 디렉터리는 제외해준다.
 
 
-.svn
+### FROM
+
+FROM은 어떤 이미지를 기반으로 이미지를 생성할지 설정
+
+Dockerfile로 이미지를 생성할 때는 항상 기존에 있는 이미지를 기반으로 생성하기 때문에 FROM은 반드시 설정해야한다.
+
+	Dockerfile
+	FROM ubuntu
+	
+	FROM ubuntu:14.04
+
+`FROM <이미지> 또는 FROM <이미지>:<태그>` 
+
+Dockerfile 파일 하나에 FROM을 여러 개 설정할 수 있다.
+
+FROM을 두 개 설정했다면 이미지가 두 개 생성된다.
+
+`--tag` 옵션으로 이미지 이름을 설정했다면 맨 마지막에 FROM에 적용된다.
+
+### MAINTAINER
+
+MAINTAINER는 이미지를 생성한 사람의 정보를 설정
+
+`MAINTANER <작성자 정보>`
+
+### RUN
+
+RUN은 FROM에서 설정한 이미지 위에서 스크립트 혹은 명령을 실행
+
+여기서 RUN으로 실행한 결과가 새 이미지로 생성되고, 실행 내역은 이미지의 히스토리에 기록된다.
+
+`RUN <명령>` 형식이며 셀 스크립트 구문을 사용할 수 있다.
+
+FROM으로 설정한 이미지에 포함된 `/bin/sh` 실행 파일을 사용하게 되며 `/bin/sh` 실행 파일이 없으면 사용할 수 없다.
+
+`RUN ["<실행 파일>", "매개 변수1>", "<매개 변수2>"` 형식
+
+실행 파일과 매개 변수를 배열 형태로 설정
+
+FROM으로 설정한 이미지 `/bin/sh` 실행 파일을 사용하지 않는 방식이다.
+
+셀 스크립트 문법이 인식되지 않으므로 셀 스크립트 문법과 관련된 무자를 그래도 실행 파일에 넘겨줄 수 있다.
+
+RUN으로 실행한 결과는 캐시되며 다음 빌드 때 재사용된다.
+
+캐시된 결과를 사용하지 않으려면 `docker build` 명령에서  `--no-cache` 옵션을 사용하면 된다.
+
+### CMD
+
+CMD는 컨테이너가 시작되었을 때 스크립트 혹은 명령을 실행
+
+`docer run` 명령으로 컨테이너를 생성하거나, `docker start` 명령으로 정지된 컨테이너를 시작할 대 실행된다.
+
+정지된 컨테이너를 시작할 때 실행된다.
+
+CMD는 Dockerfile에서 한 번만 사용할 수있다.
+
+**셸(/bin/sh)로 명령 실행하기**
+
+	CMD touch /home/hello/hello/txt
+
+`CMC <명령>`  형식
+
+셀 스크립트 구문을 사용할 수 있다.
+
+FROM으로 설정한 이미지에 포함된 `/bin/sh` 실행 파일을 사용하게 되며 `/bin/sh` 실행 파일이 없으면 사용할 수 없다.
+
+**셸 없이 바로 실행하기**
+
+	CMD ["redis-server"]
+
+**셸 없이 바로 실행할 때 매개 변수 설정**
+
+	CMD ["mysqld", "--datadir=/var/lib/mysql", "--user=mysql"]
+
+`CMD ["실행 파일>", "<매개 변수1>", "<매개 변수2>"]` 형식
+
+실행 파일과 매개 변수를 배열 형태로 설정
+
+FROM으로 설정한 이미지 `/bin/sh` 실행 파일을 사용하지 않는 방식
+
+셸 스크립트 문법이 인식되지 않으므로 셸 스크립트 문법과 관련된 문자를 그대로 실행 파일에 넘겨줄 수 있다.
+
+**ENTRYPOINT를 사용하였을 때**
+
+	ENTRYPOINT ["echo"]
+	CMD ["hello"]
+
+`CMD ["매개 변수1>", "<매개 변수2>"` 형식
+
+ENTRYPOINT에 설정한 명령에 매개 변수를 전달하여 실행
+
+Dockerfile에 ENTRYPOINT가 있으면 CMD는 ENTRYPOINT에 매개 변수만 전달하는 역할
+
+그래서 CMD 독자적으로 파일을 실행할 수 없게 된다.
+
+다음과 같이 Dockerfile을 빌드하여 컨테이너를 생성하면 **hello**가 출력된다.
+
+	sudo docker build --tag example .
+	sudo docker run example
+	hello
+
+### EXPOSE
+
+EXPOSE는 호스트와 연결할 포트 번호를 설정
+
+`docekr run` 명령의 `--expose` 옵션과 동일 
+
+    EXPOSE 하나로 포트 번호를 두 개 이상 동시에 설정할 수 있다.
+    EXPOSE 80 443
+
+`EXPOSE <포트 번호>` 형식
+
+EXPOSE는 호스트와 연결만 할 뿐 외부에 노출은 되지 않는다.
+
+포트를 외부에 노출하려면 `docker run` 명령의 `-p`, `-P` 옵션을 사용해야 한다.
+
+### ENV
+
+ENV는 환경 변수를 설정
+
+ENV로 설정한 환경 변수는 RUN, CMD, ENTRYPOINT에 적용된다.
+
+`ENV <환경 변수><값>` 형식
+
+환경 변수를 사용할 때는 `$` 를 사용하면 된다.
+
+	ENV HELLO 1234
+	CMD echo $HELLO
+	
+	sudo docker build --tag example .
+	sudo docker run example
+	1234
+
+ENV에서 설정한 **HELLO**의 값을 **1234**가 출력
+
+환경 변수는 `docker run` 명령에서도 설정할 수 있다.
+
+	sudo docker run -e HELLO=4321 example
+	4321
+
+`-e <환경 변수>=<값>` 형식
+
+`-e` 옵션은 여러번 사용할 수 있고, `--env` 옵션과 같다.
+
+### ADD
+
+ADD는 파일을 이미에 추가
+
+	ADD hello-entrypoint.sh /entrypoint.sh
+	ADD hello-dir /hello-dir
+	ADD zlib-1.2.8.tar.gz /
+	ADD hello.zip /
+	ADD http://example.com/hello.txt /hello.txt
+	ADD *.txt /root/
+
+`ADD <복사할 파일 경로> <이미지에서 파일이 위치할 경로>` 형식
+
+- `<복사할 파일 경로>`는 컨텍스트 아래를 기준으로 하며 컨텍스트 바깥의 파일, 디렉터리나 절대 경로는 사용할 수 없다.
+    - 예) `ADD ../hello.txt /home/hello` (X)
+    - 예) `ADD /home/hello/hello.txt /home/hello` (X)
+
+- `<복사할 파일 경로>`는 파일뿐만 아니라 디렉터리도 설정할 수 있으며, 디렉터리를 지정하면 디렉터리의 모든 파일을 복사한다.
+- 또한, 와일드카드를 사용하여 특정 파일만 복사할 수 있다.
+    - 예) `ADD *.txt /root/`
+- `<복사할 파일 경로>`에 인터넷에 있는 파일의 URL을 설정
+    - `<이미지에서 파일이 위치할 경로>`의 마지막에 /가 있으면 디렉터리가 생성되고 파일은 그 아래에 복시된다.
+    - `ADD http://example.com/hello.txt /home/hello/` 와 같이 설정하면 **/home/hello/hello.txt**에 파일이 복사된다.
+
+- 로컬에 있는 압축 파일(tar.gz, tar.bz2, tar.xz)은 압축을 해제하고 tar를 풀어서 추가된다. 단, 인터넷에 있는 파일 URL은 압축만 해제한 뒤 tar 파일이 그대로 추가된다.
+    - 예) `ADD hello.tar.gz /` (압축을 해제하고 tar를 풀어서 추가)
+    - 예) `ADD http://zlib.net/zlib-1.2.8.tar.gz /` (gzip 압축만 해제한 뒤 tar 파일을 추가. 단 파일 내용은 tar이지만 파일 이름은 zlib-1.2.8.tar.gz처럼 .gz가 붙어있다.)
+- `<이미지에서 파일이 위치할 경로>`는 항상 절대 경로로 설정해야 한다.
+- 마지막이 `/`로 끝나면 디렉터리가 생성되고 파일은 그 아래에 복사된다..
+- `ADD ./ /hello`와 같이 현재 디렉터리를 추가할 때 **.dockerignore** 파일에 설정한 파일과 디렉터리는 제외된다.
+
+
+
