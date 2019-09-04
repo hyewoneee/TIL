@@ -2872,4 +2872,76 @@ RESTful  클라이언트는 HTTP 요청 헤더를 사용하여 서버로부터 �
 
 ---
 
-# 10장. 시스
+# 10장. 시스템
+
+이 장은 모든 프로그램에 사용되는 **os**(operating system) 모듈은 다양한 시스템 함수를 제공
+
+### 생성하기: open()
+
+	fout = open('oops.txt', 'wt')
+	print('Oops, I created a file.', file=fout)
+	fout.close()
+
+### 존재여부 확인: exists()
+
+	import os
+	os.path.exists('oops.txt')
+	True
+
+### 타입 확인하기: isfile()
+
+	name = 'oops.txt'
+	os.path.isfile(name)
+	True
+
+	os.path.isdir(name)
+	False
+
+하나의 `(.)`은 현재 디렉터리를 나타내고, 두 개의 점은 부모(상위) 디렉터리를 나타낸다.
+
+os 모듈은 절대 경로와 상대 경로를 처리하는 많은 함수를 제공
+
+`isabs()` 함수는 인자가절대 경로인지 확인. 실제로 존재하는 파일 이름을 인자에 넣지 않아도 된다.
+
+	os.path.isabs('/big/fake/name')
+	True
+
+### 복사하기:copy()
+
+`copy()` 함수는 `shutill` 이라는 다른 모듈에 들어있다.
+
+	import shutil
+	shutil.copy('oops.txt', 'ohno.txt')
+	'ohno.txt'
+
+`shutil.move()` 함수는 파일을 복사한 후 원본 파일을 삭제한다.
+
+### 이름 바꾸기: rename()
+
+	os.rename('ohno.txt', 'ohwell.txt')
+
+### 연결하기: link(), sysmlink()
+
+유닉스에서 파일은 한 곳에 있지만, **링크**(link)라  불리는 여러 이름을 가질 수 있다.
+
+저수준의 **하드 링크**(hard link)에 주어진 파일을 모두 찾는 것은 쉬운일이 아니다.
+
+**심벌릭 링크**(sysbolic link)는 원본 파일을 새 이름으로 연결
+
+원본 파일과 새 이름의 파일을 한 번에 찾을 수 있도록 해준다.
+
+`link()` 함수는 하드 링크를 생성하고, `symlink()` 함수는 심벌릭 링크를 생성
+
+`islink()` 함수는 파일이 심벌릭 링크인지 확인
+
+	os.link('oops.txt', 'yikes.txt')
+	os.path.isfile('yikes.txt')
+	True
+
+`oops.txt` 파일의 심벌릭 링크인 새 `jeepers.txt` 파일을 생성해 보자
+
+	os.symlink('oops.txt', 'jeepers.txt')
+	os.path.islink('jeepers.txt')
+	True
+
+
