@@ -11,7 +11,7 @@
 - [x] 7장. 데이터 주무르기
 - [x] 8장. 흘러가는 데이터
 - [x] 9장. 웹
-- [ ] 10장. 시스템
+- [x] 10장. 시스템
 - [ ] 11장. 병행성과 네트워크 
 - [ ] 12장. 파이 환경 설정 및 도구: 파이써니스타 되기
 
@@ -2944,4 +2944,268 @@ os 모듈은 절대 경로와 상대 경로를 처리하는 많은 함수를 제
 	os.path.islink('jeepers.txt')
 	True
 
+
+### 퍼미션 바꾸기: chmod()
+
+유닉스 시스템에서 `chmoe()` 는 파일의 퍼미션을 변경
+
+사용자에 대한 읽기, 쓰기, 실행 퍼미션이 있다.
+
+	os.chmod('oops.txt', 0o400)
+
+### 절대 경로 얻기: abspath()
+
+상대 경로를 절대 경로로 만들어준다.
+
+	os.path.abspath('oops.txt')
+	'/Users/hyewon/workspace/29cm_api/29cm/oops.txt'
+
+### 심벌릭 링크 경로 얻기: realpath()
+
+`relapath()` 함수를 사용하여 `jeepers.txt` 파일로부터 원본 파일인 `oops.txt`파일의 이름을 얻을 수 있다.
+
+	os.path.realpath('jeepers.txt')
+	'/Users/hyewon/workspace/29cm_api/29cm/oops.txt'
+
+### 삭제하기: remove()
+
+`remove()` 함수를 사용하여 삭제
+
+	os.remove('oops.txt')
+	os.path.exists('oops.txt')
+	False
+
+### 디렉터리
+
+대부분의 **운영체제**에서 파일은 **디렉터리(폴더)**의 계층구조 안에 존재
+
+이러한 모든 파일과 디렉터리의 컨테이너는 **파일시스템**이다.(**볼륨**)
+
+**생성하기 mkdir() :** 디렉터리 생성
+
+**삭제하기 rmkir()**: 디렉터리 삭제
+
+**콘텐츠 나열 listdir()**: 디렉터리 콘텐츠 나열
+
+**현재 디렉터리 바꾸기 chdir()**: 현재 디렉터리에서 다른 디렉터리로 이동, 즉 현재 디렉터리를 바꿀 수 있다.
+
+**일치하는 파일 나열 glob()**: 복잡한 정규표현식이 아닌, 유닉스 쉘 규칙을 사용하여 일치하는 파일이나 디렉터리의 이름을 검색
+
+- 모든 것에 일치: `*`(re 모듈에서의 `.*` 와 같다)
+- 한 문자에 일치: `?`
+- a, b 혹은 c 문자에 일치: [abc]
+- a,b 혹은 c를 제외한 문자에 일치: [!abc]
+
+### 프로그램과 프로세스
+
+하나의 프로그램을 실행할 때, 운영체제는 한 **프로세스**를 생성
+
+프로세스는 운영체제의 **커널**(파일과 네트워크 연결, 사용량 통계 등 핵심 역할 수행) 에서 시스템 리소스(CPU, 메모리, 디스크 공간) 및 자료구조를 사용
+
+한 프로세스는 다른프로세스로부터 독립된 존재
+
+프로세스는 다른 프로세스가 무엇을 하는지 참조하거나 방해할 수 없다.
+
+운영체제는 실행 중인 모든 프로세스를 추적함
+
+각 프로세스에 시간을 조금씩 할애하여 한 프로세스에서 다른 프로세스로 전환
+
+운영체제는 두 가지 목표가 있다.
+
+- 프로세스를 공정하게 실행하여 되도록 많은 프로세스가 실행되게 한다.
+- 사용자의 명령을 반응적으로 처리하는 것
+
+### 프로세스 생성하기(1): subprocess
+
+파이썬 표준 라이브러리의 `subprocess` 모듈로 존재하는 다른 프로그램을 시작하거나 멈출 수 있다.
+
+	import subprocess
+	ret = subprocess.getoutput('date')
+	ret
+	'Thu Sep  5 13:36:57 KST 2019'
+
+`getoutput()` 함수의 인자는 완전한 쉘 명령의 문자열이므로 인자, 파이프, I/O 리다이렉션(<,>)등 포함
+
+	ret = subprocess.getoutput('date -u')
+	ret
+	'Thu Sep  5 04:37:55 UTC 2019'
+
+`date -u` 명령에서 파티프로 `wc`  명령을 연결하면 1줄, 6단어, 29글자를 센다.
+
+	ret = subprocess.getoutput('date -u | wc')
+	ret
+	'       1       6      29'
+
+
+`check_output()` 이라는 변형 메서트(variant method)는 명령과 인자의 리스트를 취함
+
+표준 출력으로 문자열이 아닌 바이트 타입을 반환하며, 쉘을 사용하지 않는다.
+
+	ret = subprocess.check_output(['date', '-u'])
+	ret
+	b'Thu Sep  5 04:40:18 UTC 2019\n'
+
+프로그램의 종료 상태를 표시하려면 `getstatusoutput()`을 사용 
+
+프로그램 상태 코드와 결과를 튜플로 반환
+
+	ret = subprocess.getstatusoutput('date')
+	ret
+	(0, 'Thu Sep  5 13:41:01 KST 2019')
+
+결과가 아닌 상태 코드만 저장하고 싶다면 `call()` 을 사용
+
+	ret = subprocess.call('date')
+	Thu Sep  5 13:41:47 KST 2019
+	ret
+	0
+
+유닉스 계열에서 상태코드 0은 성공적으로 종료되었다는 것을 의미
+
+`date -u` 는 현재 날짜와 시간을 UTC로 출력
+
+	ret = subprocess.call('date -u', shell=True)
+	Thu Sep  5 04:42:59 UTC 2019
+
+명령을 인식할 `shell=True`가 필요
+
+명령을 별도의 문자열로 분할하고, `*` 와 같은 와일드카드 문자를 사용
+
+### 프로세스 생성하기(2): multiprocessing
+
+`multiprocessing` 모듈을 사용하면 파이썬 함수를 별도의 프로세스로 실행하거나 한 프로그램에서 독립적인 여러 프로세스를 실행할 수 있다.
+
+프로그램의 전반적인 시간을 줄이기 위해 하나의 작업을 여러 프로세스에 할당할 수 있다.
+
+내려받은 웹 페이지를 스크래핑하고, 이미지가 크기를 조정하는 것 등에 대한 적압을 여러 프로세스로 수행할 수 있다.
+
+`multiprocessing` 모듈은 프로세스 간의 상호 통신과 모든 프로세스가 끝날 때 까지 기다리는 큐 작업에 포함
+
+### 프로세스 죽이기: terminate()
+
+하나 이상의 프로세스를 생성했고, 
+
+어떠한 이유(프로세스가 루프에 빠져서 무한정 기다리거나 심한 과부화를 일으킬 때)로 하나의 프로세스를 종료하고자 하면 `terminate()` 를 사용
+
+### 달력과 시간
+
+	윤년체크 
+	
+	import calendar
+	calendar.isleap(1900)
+	False
+	calendar.isleap(1996)
+	True
+	calendar.isleap(1999)
+	False
+	calendar.isleap(2000)
+	True
+	calendar.isleap(2002)
+	False
+
+시간 또한 다루기 힘든 문제다.
+
+특히 타임존(time zone 표준시간대)과 일광절약 시간제(daylight saving time 서머타임) 때문에 더 힘들다.
+
+파이썬 표준 라이브러리는 `datetime`, `time` , `calendar` , `dateutil` 등 시간과 날짜에 대한 여러가지 모듈이 있다.
+
+### datetime 모듈
+
+- date: 년, 월, 시
+- time: 시, 분, 초, 마이크로초
+- datetime: 날짜와 / 시간
+- timedelta: 날짜와 / 또는 시간 간격
+
+`datetime` 모듈의 `time` 객체는 하루의 시간을 나타내는데 사용 
+
+컴퓨터는 마이크로초를 정확하게 계산할 수 없다.
+
+마이크로초 측정의 정확성은 하드웨어와 운영체제의 많은 요소에 따라 달라진다.
+
+`datetime` 객체는 날짜와 시간 모두를 포함
+
+### time 모듈
+
+파이썬의 `datetime` 모듈의 `time` 객체와 별도다
+
+절대 시간을 나타내는 한 가지 방법은 어떤 시작점 이후 시간의 초를 세는 것
+
+**에포치** : **유닉스 시간**은 1970년 1월 1일 자정 이후 시간의 초를 사용
+
+에포치는 시스템 간에 날짜와 시간을 교환하는 아주 간단한 방식
+
+	import time
+	now = time.time()
+	now
+	1567659554.638052
+
+`ctime()` 함수를 사용하여 에포치 값을 문자열로 변환할 수 있다.
+
+	time.ctime(now)
+	'Thu Sep  5 13:59:14 2019'
+
+각각의 날짜와 시간 요소를 얻기 위해 `time 모듈` 의 `struct_time` 객체를 사용할 수 있다.
+
+`localtime()` 메서드는 시간을 시스템의 표준시간대로, 
+
+`gmtime()` 메서드는 시간을 UTC로 제공
+
+	ime.localtime(now)
+	time.struct_time(tm_year=2019, tm_mon=9, tm_mday=5, tm_hour=13, tm_min=59, tm_sec=14, tm_wday=3, tm_yday=248, tm_isdst=0)
+	time.gmtime(now)
+	time.struct_time(tm_year=2019, tm_mon=9, tm_mday=5, tm_hour=4, tm_min=59, tm_sec=14, tm_wday=3, tm_yday=248, tm_isdst=0)
+
+이와 반대로 `mktime()` 메서드는  `struct_time` 객체를 에포치 초로 변환
+
+	tm = time.localtime(now)
+	time.mktime(tm)
+	1567659554.0
+
+이 값은 조금 전에 본 `now()`의 에포치값과 정확하게 일치하지 않는다.
+
+`struct_time` 객체는 시간을 초까지만 유지하기 때문
+
+가능하면 표준시간대 대신 **UTC 사용**
+
+UTC는 표준시간대와 독립적인 절대시간
+
+그리고 피할 수 있다면 **일광절약시간은 사용하지 마라.**
+
+- 사용하면 연중 한 시간이 한 번에 사라지고(봄이 앞당겨진다),
+- 이 시간이 다른 시간에 두번 발생한다(가을이 늦게 온다).
+
+### 날짜와 시간 읽고 쓰기
+
+`strftime()` 을 사용하면 날짜와 시간을 문자열로 변환할 수 있다.
+
+문자열을 날짜나 시간으로 변환하기 위해 같은 포맷 문자열로 `strptime()` 을 사용
+
+이름은 운영체제의 국제화 설정인 **로케일(locale)**에 따라 다르다.
+
+다른 월, 일의 이름을 출력하려면 `setlocale()` 을 사용하여 로케일을 바꿔야한다.
+
+`setlocale()`의 첫 번째 인자는 날짜와 시간을 위한 `locale.LC_TIME` 이고, 
+
+두 번째는 언어와 국가 약어가 결함된 문자열
+
+`long_country` 에 대한 값
+
+	import locale
+	names = locale.locale_alias.keys()
+	names
+	dict_keys(['a3', 'a3_az', 'a3_az.koic', 'aa_dj', 'aa_er', ...])
+
+### 대체 모듈
+
+표준 라이브러리 모듈이 헷갈리거나 특정 포맷 변환이 부족하다 생각되는 경우, 외부 모듈을 사용할 수 있다.
+
+**arrow** **:** 많은 날짜와 시간 함수를 결합하여 간단한 API를 제공
+
+**dateutile:** 이 모듈은 대부분의 날짜 포맷을 파싱하고, 상대적인 날짜와 시간에 대해서도 처리한다.
+
+**iso8601:** 포맷에 대한 표준 라이브러리의 부족한 부분을 보충
+
+**fileming:** 표준시간대 함수를 제공
+
+---
 
