@@ -8,7 +8,7 @@ Link : http://pyrasis.com/docker.html
 - [x] 4장. Docker 이미지 생성하기
 - [x] 5장. Docker 살펴보기
 - [x] 6장. Docker 좀더 활용하기
-- [ ] 7장. Docker file 자세히 알아보기
+- [x] 7장. Docker file 자세히 알아보기
 - [ ] 8장. Docker로 애플리케이션 배포하기
 - [ ] 9장. Docker 모니터링 하기
 - [ ] 10장. Amazon Web Services에서 Docker 사용하기
@@ -953,4 +953,186 @@ ADD는 파일을 이미에 추가
 - `ADD ./ /hello`와 같이 현재 디렉터리를 추가할 때 **.dockerignore** 파일에 설정한 파일과 디렉터리는 제외된다.
 
 
+### COPY
+
+`COPY` 는 파일을 이미지에 추가한다.
+
+`ADD` 와 달리 `COPY`는 압축 파일을 추가할 때 압축을 해제하지 않고, 파일 URL도 사용할 수 없다.
+
+	Dockerfile	
+	
+	COPY hello-entrypoint.sh /entrypoint.sh
+	COPY hello-dir /hello-dir
+	COPY zlib-1.2.8.tar.gz /zlib-1.2.8.tar.gz
+	COPY *.txt /root/
+
+`COPY <복사할 파일 경로> <이미지에서 파일이 위치할 경로` 형식
+
+- `<복사할 파일 경로>` 는 컨텍스트 아래를 기준으로 하면 컨텍스트 바깥의 파일, 디렉터리나, 절대 경로는 사용할 수 없다.
+    - ex) `COPY ../hello.text /home/hello` (X)
+    - ex) `COPY /home/hello/hello.txt /home/hello` (X)
+- `<복사할 파일 경로>` 에 파일 뿐만 아니라 디렉터리로 설정할 수 있으며, 디렉터리를 지정하면 디렉터리의 모든 파일을 복사
+- 또한 와일드 카드를 사용하여 특정 파일만 복사할 수 있다.
+    - ex) `COPY *.txt /root/`
+- `<복사할 파일 경로>`에 인터넷에 있는 파일의 URL은 사용할 수 없다.
+- 압축 파일은 압축을 해제하지 않고 그대로 복사
+- `<이미지에서 파일이 위치할 경로>`는 항상 절대 경로로 설정
+- 마지막이 `/`로 끝나면 디렉터리가 생성되고 파일은 그 아래에 복사된다.
+- `COPY ./ /hello`와 같이 현재 디렉터리를 추가할 때 **.dockerignore** 파일에 설정한 파일과 디렉터리는 제외된다.
+
+`COPY` 로 추가되는 파일은 소유자(UID) 0, 그룹(GID) 0으로 설정되고 권한은 기존 파일의 권한을 따른다.
+
+### VOLUME
+
+`VOLUME` 은 디렉터리의 내용을 컨테이너에 저장하지 않고 호스트에 저장하도록 설정.
+
+	Dockerfile
+	
+	VOLUME /data
+	VOLUME ["/data", "/var/log/hello"]
+
+`VOLUME <컨테이너 디렉터리> 또는 VOLUME ["컨테이너 디렉터리 1", "컨테이너 디렉터리2"]` 형식
+
+**/data**처럼 바로 경로를 설정할 수도 있고**, [“/data”, “/var/log/hello”]**처럼 배열 형태로 설정할 수 있다.
+
+단, VOLUME으로는 호스트의 특정 디렉터리와 연결할 수는 없다.
+
+데이터 볼륨을 호스트의 특정 디렉터리와 연결하면 `docekr run` 명령에서  `-v` 옵션을 사용
+
+	sudo docker run -v /root/data:/data example
+
+옵션은 `-v <호스트 디렉터리>:<컨테이너 디렉터리>` 형식
+
+### USER
+
+USER는 명령을 실행할 사용자 계정을 설정
+
+RUN, CMD, ENTRYPOINT에 적용
+
+	USER nobody
+
+`USER <계정 사용자명>` 형식
+
+USER 뒤에 오는 모든 RUN, CMD, ENTRYPOINT에 적용되며, 중간에 다른 사용자를 설정하여 사용자를 바꿀 수 있다.
+
+	Dockerfile
+	
+	처음에는 nobody 계정으로 /tmp/hello.txt 파일을 생성
+	그 다음부터는 root 계정으로 /hello.txt 파일을 생성하고
+	(/에는 root계정만 파일을 생성할 수 있으므로),
+	/hello-entrypoint.sh파일을 실행
+	
+	USER nobody
+	RUN touch /tmp/hello.txt
+		
+	USER root
+	RUN touch /hello.txt
+	ENTRYPOINT /hello-entrypoint.sh
+
+### WORKDIR
+
+`WORKDIR`은 RUN, CMD, ENTPRYPOINT의 명령이 실행될 디렉터리를 설정
+
+	Dockerfile
+	WORKDIR /var/www
+
+`WORKDIR <경로>` 형식
+
+`WORKDIR` 뒤에 오는 모든 RUN, CMD, ENTRYPOINT 에 적용되며, 중간에 다른 디렉터리를 설정하여 실행 디렉터리를 바꿀 수 있다.
+
+	Dokcerfile
+	
+	WORKDIR /root
+	RUN touch hello.txt
+	
+	WORKDIR /tmp
+	RUN touch hello.txt
+
+`WORKDIR`은 절대 경로 대신 상대 경로도 사용할 수 있다.
+
+상대 경로를 사용하면 먼저 설정한 WORKDIR의 경로를 기준으로 디렉터리를 변경
+
+최초기준은 `/`
+
+	Dockefile
+	WORKDIR var
+	WORKDIR www
+	
+	RUN touch hello.txt
+
+상대 경로를 사용하여 `/`에서 **var**로 이동한 뒤 **www**로 이동했기 때문에 **/var/www/hello.txt**에 파일이 생성된다.
+
+### ONBULID
+
+`ONBUILD` 는 생성한 이미지를 기반으로 다른 이미지가 생성될 때 명명을 실행(tigger)
+
+최초에 ONBULID를 사용한 상태에서 아무 명령도 실행하지 않는다.
+
+다음 번에 이미지가 `FROM` 으로 사용될 때 실행할 명령을 예약하는 기능이라 할 수 있다.
+
+	Dockerfile
+	
+	ONBUILD RUN touch /hello.txt
+	ONBUILD ADD world.txt /world.txt
+
+`ONBUILD <Dockerfile 명령> <Dockerfile 명령의 매개 변수>` 형식
+
+FROM, MAINTAINER, ONBUILD를 제외한 모든 Dockerfile 명령을 사용할 수 있다.
+
+ONBUILD는 이미지를 생성한 뒤 해당 이미지를 기반으로 커스터마이징을 할 때 활용할 수 있다.
+
+다음과 같이 ONBUILD를 사용하여 `RUN touch /hello.txt`를 실행하도록 설정한다.
+
+	Dockerfile
+	
+	FROM ubuntu:latest
+	ONBUILD RUN touch /hello.txt
+
+`docker build` 명령으로 **example** 이미지를 생성한 뒤 `docker run` 명령으로 컨테이너를 생성
+
+컨테이너의 Bash 셸이 실행되면 ls 명령으로 `/`의 파일 목록을 출력
+
+	docker build --tag example .
+	docker run -i -t example /bin/bash
+	root@891ccb6749e9:/# ls
+	bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+
+ONBUILD로 설정했기 때문에 **example** 이미지에는 `/hello.txt` 파일이 생성되지 않았다.
+
+이제 FROM을 사용하여 **example** 이미지를 기반으로 새 이미지를 생성
+
+	Dockfile
+	FROM example
+
+`docker build` 명령으로 **example2** 이미지를 생성한 뒤 `docker run` 명령으로 컨테이너를 생성\
+
+컨테이너의 Bash 셸이 실행되면 `ls` 명령으로 `/`의 파일 목록을 출력
+
+	docker build --tag example2 .
+	Sending build context to Docker daemon  12.22MB
+	Step 1/1 : FROM example
+	 ---> e7eebd313cd1
+	Successfully built e7eebd313cd1
+	Successfully tagged example2:latest
+	 hyewon@sinhyewon-ui-MacBook-Pro-5  ~/study/TIL   master  docker run -i -t example2 /bin/bash
+	docker: Error response from daemon: OCI runtime create failed: container_linux.go:345: starting container process caused "exec: \"/bin/bash\": stat /bin/bash: no such file or directory": unknown.
+	
+	
+	
+	root@874d3e1fdd6f:/# ls
+	bin  boot  dev  etc  hello.txt  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+
+`docker build` 명령을 실행할 때 **# Executing 1 build triggers**라고 출력되고 그 아래부터 ONBUILD로 설정한 명령이 실행된다. 
+
+이제 ONBUILD를 통해 **example2** 이미지에 **/hello.txt** 파일이 생성됨
+
+ONBUILD는 바로 아래 자식 이미지를 생성할 때만 적용되고, 손자 이미지에는 적용되지 않는다.
+
+즉 ONBUILD 설정은 상속되지 않음
+
+	docekr inspect 명령으로 이미지의 ONBUILD 설정을 확인할 수 있다.
+	sudo docker inspect -f "{{ .ContainerConfig.OnBuild }}" example
+	[RUN touch /hello.txt]
+
+---
 
