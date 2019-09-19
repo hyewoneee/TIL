@@ -1,4 +1,4 @@
-# 도서리뷰 -템 Introducting Python 처음 시작하는 파이썬
+# 도서리뷰 Introducting Python 처음 시작하는 파이썬
 
 # 목차
 
