@@ -9,12 +9,12 @@ Link : http://pyrasis.com/docker.html
 - [x] 5장. Docker 살펴보기
 - [x] 6장. Docker 좀더 활용하기
 - [x] 7장. Docker file 자세히 알아보기
-- [ ] 8장. Docker로 애플리케이션 배포하기
-- [ ] 9장. Docker 모니터링 하기
+- [x] 8장. Docker로 애플리케이션 배포하기
+- [x] 9장. Docker 모니터링 하기
 - [ ] 10장. Amazon Web Services에서 Docker 사용하기
 - [ ] 11장. Google Cloud Platform에서 Docker 사용하기
 - [ ] 12장. Microsoft Azure에서 Docker 사용하기
-- [ ] 13장. Docker Hub 사용하기
+- [x] 13장. Docker Hub 사용하기
 - [ ] 14장. Docker Remote API 사용하기
 - [ ] 15장. CoreOS 사용하기
 - [ ] 16장. Docker로 워드프레스 블로그 구축하기
@@ -1135,4 +1135,99 @@ ONBUILD는 바로 아래 자식 이미지를 생성할 때만 적용되고, 손�
 	[RUN touch /hello.txt]
 
 ---
+# 8장. Docker로 애플리케이션 배포하기
+
+지금까지 Docker 기본 사용법과 각종 기능들을 알아보았다.
+
+8장에서는 Docker로 애플리케이션을 배포하는 방법을 알아보자
+
+분산형 버전 관리 시스템인 Git과 Docker를 이용하여 애플리케이션을 배포하는 방법을 소개하겠다.
+
+### 서버 한 대에 애플리케이션 배포하기
+
+1. 개발자의 PC에서 애플리케이션을 개발
+2. `git push` 명령으로 소스를 서버에 올림
+3. 서버에서는 저장소에 `git push` 명령이 발생하면 git hook을 실행
+4. git hook에서 Docker 이미지를 생성하고, 이미지를 컨테이너로 실행
+
+### 서버 여러 대에 애플리케이션 배포하기
+
+서버 한 대에 Docker이미지를 생성할 때와는 달리 Docker 이미지를 여러 서버에 전달해야 하기 때문에 Docker 레지스트리 서버를 구축해야한다.
+
+1. 개발자의 PC에 애플리케이션을 개발
+2. `git push` 명령으로 소스를 배포 서버에 올림
+3. 배포 서버에서는 저장소에 `git push` 명령이 발생하면 git hook을 실행
+4. git hook에서 Docker 이미지를 생성한 뒤 Docker 레지스트리에 올림
+5. 배포 서버는 SSH로 애플리케이션 서버에서 `docker pull` 명령을 실행시키고, `docker run` 명령으로 컨테이너 생성
+
+---
+# 9장. Docker 모니터링 하기
+
+Docker로 서비스를 구축했을 때 서버의 CPU나 메모리 사용량이 얼마나 되는지 모니터링 할 필요가 있다.
+
+9장에서는 다양한 도구 중에 `Graphite` 를 사용하여 서버 모니터링 시스템을 구축해보겠다.
+
+`Graphite`는 서버의 자원을 모니터링하고 그래프를 출력해주는 오픈 소스 도구이며 다양한 도구를 조합하여 사용한다.
+
+이번에는 `Graphite` 에 `Graphite Web`, `Grafana`, `Elasticsearch`, `Diamond`를 조합하여 Docker 컨테이너로 실행하는 방법을 소개하겠다.
+
+**Graphite**
+
+시간 기반의 측정치(Metric) 데이터를 저장하는 저장소. 
+
+Python으로 작성되었다.
+
+- Grapite Web
+    - 저장된 측정치 데이터와 시간을 그래프로 표시해주는 웹 어플리케이션
+- Carbon-Cache
+    - 네트워크상에서 측정치 데이터를 수집하고 디스크에 저장하는 데몬
+
+**Grafana**
+
+Graphite 대시보드
+
+웹 애플리케이션이며 Graphite Web 보다 UI나 화면 구성이 좀더 깔끔
+
+Graphite Web에서 데이터를 가져오기 때문에 Graphite Web이 필요하다
+
+- Elasticsearch
+    - Apache Lucene을 기반으로 하는 검색엔진
+    - Grafana 대시보드상의 그래프 설정값을 저장하는 용도로만 사용
+
+---
+# 13. Docker Hub 사용하기
+
+Docker Hub는  Docker 공식 ㄷ이미지를 세공하고, 사용자들끼리 이미지를 공유하는 사이트
+
+공개저장소(Pubpic Respository)
+
+- 저장된 이미지를 다른 사람들도 사용할 수 있다.
+- 또한, 개수 제한 없이 무료로 생성할 수 있다.
+
+개인 저장소(Private Respository)
+
+- 저장된 이미지를 혼자만 사용할 수 있다.
+- 1개까지 무료로 생성할 수 있고 그 이상부터는 유료다
+
+즐겨찾기(Starred)
+
+- 다른 사람의 유용한 저장소를 다음에 사용할 수 있도록 즐겨 찾기에 추가할 수 있다.
+
+Automated Build
+
+- GitHub 또는 BitBucket 저장소와 연동하여 Dockerfile을 Push했을 때 이미지를 자동으로 빌드하는 기능
+
+`docker bulid` 명령으로 이미지 생성
+
+Docker Hub에 이미지를 올리려면 이미지 이름을 `<Docker Hub 사용자 계정>/<이미지 이름>:<태그>` 형식으로 생성해야 한다.
+
+아무 사용자 이름이나 사용할 수 있지만 내 계정 이름과 일치해야 이미지를 올릴수 있다.
+
+태그를 지정하지 않으면 **latest**가 된다.
+
+`docker push` 명령으로 이미지를 올린다.
+
+`docker push <Docker Hub  사용자 계정>/<이미지 이름>:<태그>` 형식
+
+이제 다른 사람들이 `docker pull <Docker Hub 사용자 계정>/example-ningx` 명령으로 **example-nginx** 이미지를 사용할 수 있다.
 
