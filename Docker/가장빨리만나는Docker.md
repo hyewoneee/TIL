@@ -15,12 +15,12 @@ Link : http://pyrasis.com/docker.html
 - [ ] 11장. Google Cloud Platform에서 Docker 사용하기
 - [ ] 12장. Microsoft Azure에서 Docker 사용하기
 - [x] 13장. Docker Hub 사용하기
-- [ ] 14장. Docker Remote API 사용하기
+- [x] 14장. Docker Remote API 사용하기
 - [ ] 15장. CoreOS 사용하기
 - [ ] 16장. Docker로 워드프레스 블로그 구축하기
 - [ ] 17장. Docker로 Ruby on Rails 애플리케이션 구축하기
 - [ ] 18장. Docker로 Django 애플리케이션 구축하기
-- [ ] 19장. Docker 활용 시나리오
+- [x] 19장. Docker 활용 시나리오
 
 --- 
 # 1장. 가상머신과 Docker
@@ -1231,3 +1231,112 @@ Docker Hub에 이미지를 올리려면 이미지 이름을 `<Docker Hub 사용�
 
 이제 다른 사람들이 `docker pull <Docker Hub 사용자 계정>/example-ningx` 명령으로 **example-nginx** 이미지를 사용할 수 있다.
 
+---
+# 14장. Docker Remote API 사용하기
+
+Docker는 데몬과 클라이언트 간의 통신을 할 때 로컬에서는 유닉스 소켓을 사용하고, 원격에서는 TCP 소켓을 사용한다.
+
+여기에 HTTP REST 형식으로 API가 구현되어 있다.
+
+따라서 API가 특정 언어에 종속되어 있지 않고, 다양한 언어에서 사용할 수 있다.
+
+먼저 기존의 Docker 데몬을 정지하고 TCP 소켓으로 다시 실행시켜 API 테스트해보자
+
+	service docker stop
+	docker -d -H tcp://0.0.0.0:4243
+
+`docker -d -H tcp://0.0.0.0:4243` 형식
+
+`-d` 옵션을 사용하여 데몬 모드로 실행하고 
+
+`-H` 옵션을 사용하여 접속을 받을 IP 주소와 포트 번호를 설정
+
+Docker 데몬의 기본 포트번호는 4243
+
+명령을 실행하면 Docker 데몬이 foreground로 실행된다.
+
+따라서 테스트를 위해 새 터미널을 실행
+
+Docker Remote API는 HTTP REST 형식으로 `curl` 명령으로 손쉽게 사용할 수 있다.
+
+	nginx 이미지를 받음
+	curl -X POST http://127.0.0.1:4243/images/create?fromImage=nginx:latest
+
+- `-X` :POST 메서드를 사용하도록 설정
+- 이미지를 받는 Remote API는 `/images/create?fromimage=<이미지 이름>:<태그>` 형식
+
+	nginx 이미지로 컨테이너를 생성
+	
+	curl -X POST -H "Content-Type: application/json" \
+	    -d '{ "Image":"nginx:latest", "ExposedPorts":"80/tcp" }' \
+	    http://127.0.0.1:4243/containers/create
+	{"Id":"386147f1c71ca7ee6a7013dbd2fff5d3091e41268885f954046be964b9ade39e","Warnings":null}
+
+- `-X` : POST 메서드를 사용하도록 설정
+- `-H` : Context-Type을 **application/json**으로 사용하도록 설정
+- `-d` : 컨테이너를 생성하기 위해 설정 데이터를 보냄. 여기서는 **Image**에 **nginx:lastest**를 설정하였고, 호스트에 포트를 연결하기 위해 **ExposedPosts**에 **80/tcp**를 설정
+- 컨테이너를 생성하는 Remote API는 `/containers/create` 다.
+
+컨테이너가 생성되면 컨테이너 ID가 출력된다.
+
+이처럼 HTTP 메서드를 이용하여 Docker 데몬을 제어할 수 있다.
+
+---
+# 19장. Docker 활용 시나리오
+
+### 로드 밸런서와 연계한 확장 전개
+
+클라우드 서비스가 등장하면서 이제 클릭 몇 번 만으로 수십, 수백대의 서버를 사용할 수 있게 되었다.
+
+그래서 예전처럼 서버를 1년 365일 켜두고 쓰는 것이 아니라 필요할 때만 서버 인스턴스를 생성하여 사용하는 형태로 바뀌고 있다.
+
+특히 부하를 분산하는 로드 밸런서와 자동 확장(Auto Scaling) 기능을 활용하여 급격히 늘어나는 트래픽에도 유연하게 대처할 수 있게 되었다.
+
+Docker를 활용하면 클라우드 서비스에서 제공하는 기능과 조합하여 좀더 편리한 자동 확장 환경을 구축할 수 있다.
+
+AWS의 ELB 로드밸런서와 Auto Scaling에 Docker를 활용한 구성도다.
+
+- ELB 로드 밸런서는 외부에서 들어오는 트래픽을 Auto Scaling 그룹에 속한 EC2 인스턴스에 분배한다.
+- Auto Scaling은 트래픽에 따라 EC2 인스턴스를 생성하거나 삭제한다.
+- 새로 생성되는 EC2 인스턴스는 Docker 레지스트리에서 이미지를 받아와서 컨테이너로 실행한다.
+- EC2 인스턴스를 생성할 때 모든 서비스 환경이 설정된  AMI(Amazon Machine Images)를 이용하는 것보다 Docker 를 사용하는 쪽이 좀 더 간편하다.
+- 특히 Docker를 사용하면 EC2 인스턴스와 내부 테스트 환경 그리고 개발자의 PC를 동일한 환경으로 구성할 수 있다.
+    - AMI에는 Docker만 설치한 상태로 사용
+    - Docker 이미지를 빨리 받아올 수 있도록 Docker 레지스트리는 AWS 내부에 구축한다.
+
+이런 방식으로 AWS뿐만 아니라 다른 클라우드 서비스에서도 동일하게 구축할 수 있다.
+
+### 개발, 테스트, 운영을 통합
+
+DevOps(Dev + Ops) 는 Chef의 개발사인 Opscode에서 만든 용어다.
+
+DevOps는 개발, 테스트, 운영에 이르는 전 구간을 자동화하여 배포 주기를 짧게하고, 표준화된 도구를 사용하여 커뮤니케이션 비용을 줄이는 환경을 뜻한다.
+
+- 개발자가 소스 서버/실드 서버에 소스를 올리면 Docker 이미지를 자동으로 빌드한다.
+    - 소스 서버는 Git, Subversion, Mericuial, Perforce 등과 같은 도구로 구성
+    - 빌드 서버는 Jenkins, CruiseControl 등과 같은 도구로 생성
+- 자동 빌드된 Docker 이미지는 미리 정의된 테스트 케이스로 자동 테스트하거나 사람이 직접 테스트한다.
+    - 웹 사이트는 Phantofjs와 같은 Headless 웹 브라우저로 손쉽게 테스트 할 수 있다.
+- 테스트가 완료되면 Docker 이미지를 서비스 용 서버에 배포하고, 컨테이너로 실행한다.
+
+Docker를 사용하면 자신의 PC에서 이미지와 컨테이너를 생성하여 서비스 환경과 동일한 상태에서 개발할 수 있다.
+
+그리고 테스트 담당자는 서비스 환경, 개발자의 PC와 동일한 상태에서 테스트를 할 수 있다.
+
+즉 Docker라는 공통된 도구를 사용하므로 개발자의 PC의 환경, 테스트 환경, 서비스 환경이 달라서 발생하는 각종 문제를 방지할 수 있다.
+
+### 손쉬운 서비스 이전
+
+Docker만 설치되어 있으면 어디든지 Docker 컨테이너를 생성할 수 있기 때문에 사내망에서 클라우드 서비스로 또는, 클라우드 서비스에서 다른 클라우드 서비스로 손쉽게 이전할 수 있다.
+
+### 테스트 용도
+
+Docker를 활용하면 실험적인 환경을 빠르게 구성해볼 수 있다.
+
+한 번 만들어놓은 개발 환경은 Dockerfile로 작성하여 공유하면 편리하다.
+
+간단하게 테스트 해보려면 `docker run` 명령의 `--rm` 옵션을 사용하면 편리하다.
+
+**ubuntu:14.04** 이미지로 테스트 해본 뒤 `exit` 명령으로 빠져나오면 컨테이너가 바로 삭제된다.
+
+    docker run -i -t --rm ubuntu:14.04 /bin/bash
